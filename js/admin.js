@@ -114,7 +114,7 @@ async function loadInvoices(filter = '') {
     if (!filter) return true;
     const f = filter.toLowerCase();
     return (i.invoice_number || '').toLowerCase().includes(f) ||
-           (i.customer_name || '').toLowerCase().includes(f);
+      (i.customer_name || '').toLowerCase().includes(f);
   });
 
   const tbody = $('invoicesTable').querySelector('tbody');
@@ -218,7 +218,7 @@ async function loadWorkers() {
     const isMe = u.id === me.id;
     const isPending = !u.is_active;
 
-    // Role cell
+    // Role badge ya dropdown
     let roleCell;
     if (isMe) {
       roleCell = `<span style="color:#f59e0b;font-weight:700">👑 Admin (You)</span>`;
@@ -226,11 +226,12 @@ async function loadWorkers() {
       roleCell = `<span style="color:#f59e0b;font-weight:600;font-size:12px">⏳ Pending</span>`;
     } else {
       roleCell = `
-        <select class="role-select" data-id="${u.id}" 
-          style="padding:6px 10px;border-radius:6px;background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--text);font-size:13px">
-          <option value="worker" ${u.role === 'worker' ? 'selected' : ''}>👤 Worker</option>
-          <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>👑 Admin</option>
-        </select>`;
+    <select class="role-select" data-id="${u.id}" 
+      style="padding:6px 10px;border-radius:6px;background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--text);font-size:13px">
+      <option value="worker" ${u.role === 'worker' ? 'selected' : ''}>👤 Worker</option>
+      <option value="technician" ${u.role === 'technician' ? 'selected' : ''}>🔧 Technician</option>
+      <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>👑 Admin</option>
+    </select>`;
     }
 
     const rowStyle = isPending
@@ -262,23 +263,23 @@ async function loadWorkers() {
         </td>
         <td>
           ${isPending
-            ? `<button class="btn" data-approve="${u.id}" 
+        ? `<button class="btn" data-approve="${u.id}" 
                  style="background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none;padding:6px 12px;min-height:auto;font-size:12px">
                  ✅ Approve
                </button>`
-            : `<div class="toggle ${u.is_active ? 'on' : ''}" 
+        : `<div class="toggle ${u.is_active ? 'on' : ''}" 
                  data-perm="is_active" data-id="${u.id}"></div>`
-          }
+      }
         </td>
         <td>
           ${!isMe
-            ? `<button class="btn danger" 
+        ? `<button class="btn danger" 
                  style="padding:6px 10px;min-height:auto;font-size:12px" 
                  data-del-user="${u.id}">
                  🗑 Delete
                </button>`
-            : ''
-          }
+        : ''
+      }
         </td>
       </tr>`;
   }).join('');
@@ -694,3 +695,75 @@ async function loadPending() {
     });
   });
 }
+
+
+async function loadTechnicianInvoices(filter = '') {
+  const { data, error } = await supabase
+    .from('technician_invoices')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Load tech invoices error:', error);
+    return;
+  }
+
+  const list = (data || []).filter((i) => {
+    if (!filter) return true;
+    const f = filter.toLowerCase();
+    return (
+      (i.invoice_number || '').toLowerCase().includes(f) ||
+      (i.customer_name || '').toLowerCase().includes(f) ||
+      (i.technician_name || '').toLowerCase().includes(f)
+    );
+  });
+
+  const tbody = $('techInvoicesTable').querySelector('tbody');
+
+  if (!list.length) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="8" style="text-align:center;padding:20px;color:var(--text-muted)">
+          Koi technician invoice nahi hai.
+        </td>
+      </tr>`;
+    return;
+  }
+
+  tbody.innerHTML = list.map((i) => {
+    const statusColor =
+      i.payment_status === 'Paid' ? '#10b981' :
+        i.payment_status === 'Partial' ? '#f59e0b' : '#ef4444';
+
+    return `
+      <tr>
+        <td>${escapeHtml(i.invoice_number)}</td>
+        <td>${escapeHtml(i.technician_name || '-')}</td>
+        <td>${escapeHtml(i.customer_name)}</td>
+        <td>${escapeHtml(i.service_type || '-')}</td>
+        <td>${formatMoney(i.grand_total)}</td>
+        <td><span style="color:${statusColor};font-weight:600;font-size:12px">${i.payment_status || 'Pending'}</span></td>
+        <td>${formatDate(i.created_at)}</td>
+        <td>
+          <button class="btn" style="padding:6px 12px;min-height:auto;font-size:12px" 
+            onclick="window.location.href='technician-invoice.html?id=${i.id}'">
+            View
+          </button>
+          <button class="btn danger" style="padding:6px 12px;min-height:auto;font-size:12px"
+            data-del-tech="${i.id}">Del</button>
+        </td>
+      </tr>`;
+  }).join('');
+
+  tbody.querySelectorAll('[data-del-tech]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      if (!confirm('Delete this technician invoice?')) return;
+      await supabase.from('technician_invoices').delete().eq('id', btn.dataset.delTech);
+      loadTechnicianInvoices();
+    });
+  });
+}
+
+// Init me add karo
+await loadTechnicianInvoices();
+$('techSearch')?.addEventListener('input', (e) => loadTechnicianInvoices(e.target.value));

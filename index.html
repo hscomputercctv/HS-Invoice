@@ -38,23 +38,27 @@
 
       <!-- SIGNUP -->
       <form id="signupForm" class="form hidden">
-        <label>Full Name</label>
-        <input type="text" id="signupName" required placeholder="John Doe" />
+  <label>Full Name</label>
+  <input type="text" id="signupName" required placeholder="John Doe" />
 
-        <label>Email</label>
-        <input type="email" id="signupEmail" required autocomplete="email" placeholder="you@example.com" />
+  <label>Email</label>
+  <input type="email" id="signupEmail" required autocomplete="email" placeholder="you@example.com" />
 
-        <label>Password</label>
-        <input type="password" id="signupPassword" required minlength="6" placeholder="Min 6 characters" />
+  <label>Password</label>
+  <input type="password" id="signupPassword" required minlength="6" placeholder="Min 6 characters" />
 
-        <label>Role</label>
-        <select id="signupRole">
-          <option value="worker">Shop Worker</option>
-          <option value="admin">Admin</option>
-        </select>
+  <label>Role</label>
+  <select id="signupRole" required>
+    <option value="worker">👤 Shop Worker</option>
+    <option value="technician">🔧 Technician</option>
+  </select>
 
-        <button type="submit" class="btn primary">Create Account ✨</button>
-      </form>
+  <p class="muted" style="margin-top:14px;font-size:12px;text-align:center;padding:10px;background:rgba(99,102,241,0.1);border-radius:8px;border-left:3px solid var(--primary)">
+    ℹ️ Account banane ke baad <strong>Admin approval</strong> ka wait karein. Approve hone ke baad hi aap login kar sakte hain.
+  </p>
+
+  <button type="submit" class="btn primary">Create Account ✨</button>
+</form>
 
       <div id="authMsg" class="msg"></div>
     </div>

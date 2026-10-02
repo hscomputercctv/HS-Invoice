@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Technician Dashboard — H.S Computers & CCTV</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css" />
+<link rel="stylesheet" href="css/dashboard.css" />
+</head>
+<body>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+
+<header class="topbar">
+  <div class="brand">🔧 InvoicePro <span class="badge" style="background:linear-gradient(135deg,#f59e0b,#dc2626)">Technician</span></div>
+  <button id="logoutBtn" class="btn ghost">Logout</button>
+</header>
+
+<nav class="tabs-nav">
+  <button class="tab-btn active" data-view="overview">📊 Overview</button>
+  <button class="tab-btn" data-view="invoices">🔧 My Invoices</button>
+</nav>
+
+<main class="container">
+
+  <section id="view-overview" class="view active">
+    <h2>Welcome, <span id="userName" style="font-weight:800">Technician</span> 👋</h2>
+    <div class="cards">
+      <div class="card">
+        <div class="k">Today's Jobs</div>
+        <div class="v" id="tToday">0</div>
+      </div>
+      <div class="card">
+        <div class="k">Total Jobs</div>
+        <div class="v" id="tTotal">0</div>
+      </div>
+      <div class="card">
+        <div class="k">My Total Charges</div>
+        <div class="v" id="tTotalAmount">PKR 0</div>
+      </div>
+      <div class="card">
+        <div class="k">Pending Payments</div>
+        <div class="v" id="tPending" style="color:#f59e0b">PKR 0</div>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <button class="btn primary" id="newTechInvoiceBtn">+ New Technician Invoice</button>
+    </div>
+  </section>
+
+  <section id="view-invoices" class="view">
+    <h2>🔧 My Technician Invoices</h2>
+    <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px">
+      Sirf aapki invoices yahan dikhti hain. Admin ko saari dikhti hain.
+    </p>
+    <div class="table-wrap">
+      <table id="techInvoicesTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Customer</th>
+            <th>Service</th>
+            <th>Total</th>
+            <th>Status</th>
+            <th>Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+</main>
+
+<script type="module" src="js/technician.js"></script>
+</body>
+</html>

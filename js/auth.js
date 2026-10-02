@@ -55,8 +55,8 @@ loginForm?.addEventListener('submit', async (e) => {
   // 3) ⭐ APPROVAL CHECK
   if (!profile.is_active) {
     showMsg(
-      msg, 
-      '⏳ Aapka account approval ka intezaar kar raha hai. Admin approve karne ke baad aap login kar sakte hain.', 
+      msg,
+      '⏳ Aapka account approval ka intezaar kar raha hai. Admin approve karne ke baad aap login kar sakte hain.',
       'error'
     );
     await supabase.auth.signOut();
@@ -67,8 +67,11 @@ loginForm?.addEventListener('submit', async (e) => {
 
   // 4) Success → redirect based on role
   showMsg(msg, '✅ Login success!', 'success');
+
   setTimeout(() => {
-    window.location.href = profile.role === 'admin' ? 'admin.html' : 'worker.html';
+    window.location.href = profile.role === 'admin' ? 'admin.html' :
+      profile.role === 'technician' ? 'technician.html' :
+        'worker.html';;
   }, 500);
 });
 
@@ -89,8 +92,8 @@ signupForm?.addEventListener('submit', async (e) => {
     email,
     password,
     options: {
-      data: { 
-        full_name: fullName, 
+      data: {
+        full_name: fullName,
         role: 'worker'        // Hamesha worker
       }
     }
@@ -148,7 +151,9 @@ signupForm?.addEventListener('submit', async (e) => {
       return;
     }
 
-    window.location.href = profile.role === 'admin' ? 'admin.html' : 'worker.html';
+    window.location.href =     profile.role === 'admin' ? 'admin.html' :
+    profile.role === 'technician' ? 'technician.html' :
+    'worker.html';
   } catch (err) {
     console.error('Auto-redirect error:', err);
   }

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Technician Invoice — H.S Computers & CCTV</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css" />
+<link rel="stylesheet" href="css/invoice.css" />
+<style>
+  .tech-section {
+    background: rgba(245,158,11,0.08);
+    border-left: 4px solid #f59e0b;
+    padding: 16px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+  }
+  .tech-section h3 {
+    font-size: 13px;
+    text-transform: uppercase;
+    color: #f59e0b;
+    margin-bottom: 12px;
+    letter-spacing: 1px;
+    font-weight: 700;
+  }
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .expense-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  @media (max-width: 640px) {
+    .two-col, .expense-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="invoice-toolbar no-print">
+  <button class="btn ghost" onclick="history.back()">← Back</button>
+  <div>
+    <button class="btn primary" id="saveBtn">💾 Save Invoice</button>
+    <button class="btn" id="printBtn">🖨 Print / PDF</button>
+  </div>
+</div>
+
+<div id="invoicePage" class="invoice-page">
+
+  <!-- HEADER -->
+  <div class="inv-header">
+    <div class="inv-shop-info">
+      <img id="shopLogo" class="inv-logo hidden" alt="Shop Logo" />
+      <div>
+        <h1 id="shopNameDisplay">H.S Computers & CCTV</h1>
+        <p id="shopAddrDisplay"></p>
+        <p><span id="shopPhoneDisplay"></span> <span id="shopEmailDisplay"></span></p>
+      </div>
+    </div>
+    <div class="inv-meta">
+      <h2 style="color:#f59e0b">TECH INVOICE</h2>
+      <p><strong>#</strong> <span id="invNo"></span></p>
+<p><strong>Date:</strong> <span id="invDate"></span></p>
+      <p><strong>Technician:</strong> <span id="invBy"></span></p>
+    </div>
+  </div>
+
+  <!-- CUSTOMER + SERVICE -->
+  <div class="tech-section">
+    <h3>👤 Customer & Service Details</h3>
+    <div class="two-col">
+      <input class="no-print" id="custName" placeholder="Customer name *" />
+      <input class="no-print" id="custPhone" placeholder="Customer phone" />
+      <textarea class="no-print" id="custAddr" placeholder="Address" rows="2" style="grid-column:1/-1"></textarea>
+      <input class="no-print" id="serviceType" placeholder="Service type (Repair, Installation...)" />
+      <input class="no-print" id="serviceDate" type="date" />
+    </div>
+    <div class="print-only">
+      <p><strong id="custNameP"></strong></p>
+      <p id="custPhoneP"></p>
+      <p id="custAddrP"></p>
+      <p id="serviceTypeP"></p>
+    </div>
+  </div>
+
+  <!-- PARTS USED -->
+  <div class="tech-section">
+    <h3>🔩 Parts Used / Items</h3>
+    <table class="inv-table">
+      <thead>
+        <tr>
+          <th style="width:40px">#</th>
+          <th>Part / Item Name</th>
+          <th style="width:70px">Qty</th>
+          <th style="width:100px">Price</th>
+          <th style="width:100px">Total</th>
+          <th class="no-print" style="width:50px"></th>
+        </tr>
+      </thead>
+      <tbody id="itemsBody"></tbody>
+    </table>
+    <button class="btn no-print" id="addItemBtn" style="margin-top:12px">+ Add Part</button>
+  </div>
+
+  <!-- EXPENSES -->
+  <div class="tech-section">
+    <h3>💰 Charges & Expenses</h3>
+    <div class="expense-row">
+      <label>Labor / Service Charge
+        <input class="no-print" id="laborCharge" type="number" value="0" step="0.01" />
+        <span class="print-only" id="laborChargeP">PKR 0.00</span>
+      </label>
+      <label>Travel / Petrol Expense
+        <input class="no-print" id="travelExpense" type="number" value="0" step="0.01" />
+        <span class="print-only" id="travelExpenseP">PKR 0.00</span>
+      </label>
+      <label>Other Expense
+        <input class="no-print" id="otherExpense" type="number" value="0" step="0.01" />
+        <span class="print-only" id="otherExpenseP">PKR 0.00</span>
+      </label>
+      <label>Other Expense Note
+        <input class="no-print" id="otherExpenseNote" placeholder="e.g., Tool purchase" />
+        <span class="print-only" id="otherExpenseNoteP"></span>
+      </label>
+    </div>
+  </div>
+
+  <!-- TOTALS -->
+  <div class="inv-totals">
+    <div><span>Parts Total</span> <span id="partsTotal">PKR 0.00</span></div>
+    <div><span>Labor Charge</span> <span id="laborTotal">PKR 0.00</span></div>
+    <div><span>Travel Expense</span> <span id="travelTotal">PKR 0.00</span></div>
+    <div><span>Other Expense</span> <span id="otherTotal">PKR 0.00</span></div>
+    <div>
+      <span>Discount</span>
+      <input class="no-print small-input" type="number" id="discount" value="0" step="0.01" />
+      <span class="print-only" id="discountP">PKR 0.00</span>
+    </div>
+    <div class="grand"><span>Grand Total</span> <span id="grandTotal">PKR 0.00</span></div>
+  </div>
+
+  <!-- PAYMENT -->
+  <div class="inv-footer">
+    <label>Payment Mode
+      <select id="paymentMode" class="no-print">
+        <option>Cash</option><option>UPI</option><option>Card</option><option>Bank Transfer</option>
+      </select>
+    </label>
+    <label>Payment Status
+      <select id="paymentStatus" class="no-print">
+        <option value="Pending">Pending</option>
+        <option value="Paid">Paid</option>
+        <option value="Partial">Partial</option>
+      </select>
+    </label>
+    <label>Amount Received
+      <input class="no-print" id="amountReceived" type="number" value="0" step="0.01" />
+    </label>
+    <label>Notes
+      <textarea id="notes" class="no-print" rows="2" placeholder="Any additional notes..."></textarea>
+    </label>
+  </div>
+
+  <p class="thanks">🔧 H.S Computers & CCTV — Technician Service Invoice</p>
+</div>
+
+<script type="module" src="js/technician-invoice.js"></script>
+</body>
+</html>

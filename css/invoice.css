@@ -230,54 +230,118 @@
 .print-only { display: none; }
 
 /* ============================================
-   PRINT — A4 PERFECT
+   PRINT STYLES
    ============================================ */
 @media print {
-  @page { size: A4; margin: 12mm; }
+  /* A4 Page Setup */
+  @page {
+    size: A4 portrait;
+    margin: 12mm;
+  }
 
+  /* Body reset */
   html, body {
     background: #fff !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    font-size: 11pt !important;
     color: #000 !important;
-    font-size: 12px;
   }
-  body::before, .orb, .invoice-page::before { display: none !important; }
 
-  .no-print, .no-print * { display: none !important; }
-  .print-only { display: block !important; }
+  /* ⭐ BUTTONS / TOOLBAR HIDE */
+  .no-print,
+  .no-print *,
+  .invoice-toolbar,
+  .invoice-toolbar *,
+  button,
+  .btn {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    width: 0 !important;
+    overflow: hidden !important;
+    opacity: 0 !important;
+  }
 
+  /* Print-only elements show karo */
+  .print-only,
+  .print-only * {
+    display: block !important;
+    visibility: visible !important;
+  }
+
+  /* ⭐ A4 PAGE SETUP */
   .invoice-page {
-    max-width: 100%;
-    margin: 0;
-    box-shadow: none;
-    padding: 0;
-    border-radius: 0;
-    animation: none;
+    width: 100% !important;
+    max-width: 186mm !important;      /* A4 width - margins */
+    min-height: auto !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    background: #fff !important;
+    page-break-after: avoid;
   }
-  .inv-header, .inv-customer, .inv-table, .inv-totals, .inv-footer {
-    animation: none;
+
+  /* Orbs / backgrounds hide */
+  .orb,
+  body::before {
+    display: none !important;
   }
-  .inv-header h1, .inv-meta h2, .inv-totals .grand span:last-child {
-    -webkit-text-fill-color: #000 !important;
-    color: #000 !important;
-  }
+
+  /* Colors force print */
   .inv-table th {
     background: #333 !important;
     color: #fff !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
-  .inv-customer { background: #f5f5f5 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  .inv-totals { background: #f5f5f5 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 
+  .inv-table td {
+    color: #000 !important;
+    border-color: #999 !important;
+  }
+
+  /* Text colors */
+  .invoice-page,
+  .invoice-page * {
+    color: #000 !important;
+  }
+
+  .inv-header h1 {
+    color: #6366f1 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .inv-meta h2 {
+    color: #f59e0b !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Inputs — borders hide */
   input, textarea, select {
     border: none !important;
-    box-shadow: none !important;
     background: transparent !important;
+    box-shadow: none !important;
     color: #000 !important;
     padding: 0 !important;
   }
-}
 
+  /* Page break rules */
+  .inv-table,
+  .inv-totals,
+  .inv-footer {
+    page-break-inside: avoid;
+  }
+
+  .invoice-page {
+    page-break-after: always;
+  }
+}
 /* MOBILE */
 @media (max-width: 700px) {
   .invoice-page { padding: 24px 18px; margin: 12px; border-radius: 12px; }
@@ -328,4 +392,80 @@
 @media (max-width: 700px) {
   .inv-shop-info { gap: 10px; }
   .inv-logo { width: 60px; height: 60px; }
+}
+
+/* ============================================
+   FORCE DARK TEXT ON WHITE BACKGROUND
+   ============================================ */
+
+/* Invoice page ke andar sab text dark */
+.invoice-page,
+.invoice-page * {
+  color: #1f2937;
+}
+
+/* Meta section (top right — Invoice #, Date, By) */
+.inv-meta,
+.inv-meta p,
+.inv-meta strong,
+.inv-meta span {
+  color: #1f2937 !important;
+}
+
+/* Invoice number aur date */
+#invNo,
+#invDate,
+#invBy {
+  color: #1f2937 !important;
+  font-weight: 600;
+}
+
+/* Customer print-only fields */
+.print-only,
+.print-only *,
+.print-only p,
+.print-only strong,
+.print-only span {
+  color: #1f2937 !important;
+}
+
+/* Service date print */
+#printServiceDate,
+#serviceDateP {
+  color: #1f2937 !important;
+}
+
+/* Totals section */
+.inv-totals,
+.inv-totals div,
+.inv-totals span {
+  color: #1f2937 !important;
+}
+
+.inv-totals .grand,
+.inv-totals .grand span {
+  color: #1f2937 !important;
+}
+
+/* Customer section headings */
+.inv-customer h3,
+.tech-section h3 {
+  color: #6366f1 !important;    /* Blue accent */
+}
+
+/* Table cells */
+.inv-table td,
+.inv-table th {
+  color: #1f2937 !important;
+}
+
+.inv-table input {
+  color: #1f2937 !important;
+}
+
+/* Footer notes */
+.inv-footer,
+.inv-footer label,
+.thanks {
+  color: #4b5563 !important;
 }
