@@ -1,25 +1,40 @@
 import { supabase } from './supabase-config.js';
-import { formatMoney, formatDate, requireAuth, escapeHtml } from './utils.js';
+import { 
+  formatMoney, 
+  formatDate, 
+  requireAuth, 
+  escapeHtml 
+} from './utils.js';
 
 const $ = (id) => document.getElementById(id);
 let me = null;
 
+// ============================================
+// INIT
+// ============================================
 (async () => {
   const ctx = await requireAuth(supabase, 'worker');
-  if (!ctx || !ctx.profile) return;;
+  if (!ctx) return;
   me = ctx.profile;
 
+  // ─── Greeting ───
   $('userName').textContent = me.full_name;
+
+  // ─── Logout ───
   $('logoutBtn').addEventListener('click', async () => {
     await supabase.auth.signOut();
     window.location.href = 'index.html';
   });
 
-  // Permissions
-  if (me.can_view_sales) $('salesCard').classList.remove('hidden');
-  if (me.can_manage_products) $('navProducts').classList.remove('hidden');
+  // ─── Permission-based UI ───
+  if (me.can_view_sales) {
+    $('salesCard').classList.remove('hidden');
+  }
+  if (me.can_manage_products) {
+    $('navProducts').classList.remove('hidden');
+  }
 
-  // Tabs
+  // ─── Tabs ───
   document.querySelectorAll('.tab-btn').forEach((b) => {
     b.addEventListener('click', () => {
       document.querySelectorAll('.tab-btn').forEach((x) => x.classList.remove('active'));
@@ -29,18 +44,28 @@ let me = null;
     });
   });
 
+  // ─── New Invoice Button ───
   $('newInvoiceBtn').addEventListener('click', () => {
-    if (!me.can_create_invoice) return alert('You do not have permission to create invoices.');
+    if (!me.can_create_invoice) {
+      return alert('⚠️ Aapko invoice banane ki permission nahi hai. Admin se contact karein.');
+    }
     window.location.href = 'invoice.html';
   });
 
-  await loadMyInvoices();
+  // ─── Load Data ───
+  await loadInvoices();
 
-  if (me.can_manage_products) await loadProducts();
+  if (me.can_manage_products) {
+    await loadProducts();
+  }
 })();
 
-async function loadMyInvoices() {
-  // Saare invoices fetch karo (apni + admin ki + doosre workers ki)
+// ============================================
+// LOAD INVOICES — FIX 4 APPLIED
+// ============================================
+async function loadInvoices() {
+  // Sab invoices fetch karo — RLS policy "select_all" ki wajah se
+  // Worker apni + admin ki + doosre workers ki sab dekh sakta hai
   const { data, error } = await supabase
     .from('invoices')
     .select('*')
@@ -73,28 +98,72 @@ async function loadMyInvoices() {
   const tbody = $('invoicesTable').querySelector('tbody');
 
   if (!allInvoices.length) {
-    tbody.innerHTML = `<tr><td colspan="6" class="muted" style="text-align:center;padding:20px">Koi invoice nahi hai. "+ Create New Invoice" dabao.</td></tr>`;
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6" class="muted" style="text-align:center;padding:20px">
+          Koi invoice nahi hai. "+ Create New Invoice" dabao.
+        </td>
+      </tr>`;
     return;
   }
 
   tbody.innerHTML = allInvoices.map((i) => {
     const isMine = i.created_by === me.id;
     const badge = isMine
-      ? `<span style="color:#10b981;font-size:11px;font-weight:700">👤 MY</span>`
-      : `<span style="color:#6366f1;font-size:11px;font-weight:700">👑 ADMIN</span>`;
+      ? `<span style="color:#10b981;font-size:10px;font-weight:700;margin-left:4px">👤 YOU</span>`
+      : `<span style="color:#6366f1;font-size:10px;font-weight:700;margin-left:4px">👑 ADMIN</span>`;
 
     return `
-    <tr>
-      <td>${escapeHtml(i.invoice_number)}</td>
-      <td>${escapeHtml(i.customer_name)}</td>
-      <td>${formatMoney(i.grand_total)}</td>
-      <td>${escapeHtml(i.created_by_name || '-')} ${badge}</td>
-      <td>${formatDate(i.created_at)}</td>
-      <td>
-        <button class="btn" style="padding:6px 12px;min-height:auto;font-size:12px" onclick="window.location.href='invoice.html?id=${i.id}'">
-          🖨 View
-        </button>
-      </td>
-    </tr>`;
+      <tr>
+        <td>${escapeHtml(i.invoice_number)}</td>
+        <td>${escapeHtml(i.customer_name)}</td>
+        <td>${formatMoney(i.grand_total)}</td>
+        <td>${escapeHtml(i.created_by_name || '-')}${badge}</td>
+        <td>${formatDate(i.created_at)}</td>
+        <td>
+          <button class="btn" 
+            style="padding:6px 12px;min-height:auto;font-size:12px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none"
+            onclick="window.location.href='invoice.html?id=${i.id}'">
+            🖨 View
+          </button>
+        </td>
+      </tr>`;
   }).join('');
+}
+
+// ============================================
+// LOAD PRODUCTS — FIX 4 (only active)
+// ============================================
+async function loadProducts() {
+  const { data, error } = await supabase
+    .from('products')
+    .select('*')
+    .eq('is_active', true)            // 👈 Sirf active products
+    .order('name', { ascending: true });
+
+  if (error) {
+    console.error('Load products error:', error);
+    return;
+  }
+
+  const tbody = $('productsTable').querySelector('tbody');
+
+  if (!data || data.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="4" class="muted" style="text-align:center;padding:20px">
+          Koi products nahi hain. Admin se contact karein.
+        </td>
+      </tr>`;
+    return;
+  }
+
+  tbody.innerHTML = data.map((p) => `
+    <tr>
+      <td>${escapeHtml(p.name)}</td>
+      <td>${formatMoney(p.price)}</td>
+      <td>${p.tax_percent}%</td>
+      <td>${p.stock}</td>
+    </tr>
+  `).join('');
 }
