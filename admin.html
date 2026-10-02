@@ -1,132 +1,180 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
-<meta name="theme-color" content="#6366f1" />
-<title>Admin Dashboard — InvoicePro</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css" />
-<link rel="stylesheet" href="css/dashboard.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <meta name="theme-color" content="#6366f1" />
+  <title>Admin Dashboard — InvoicePro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/dashboard.css" />
 </head>
+
 <body>
-<div class="orb orb-1"></div>
-<div class="orb orb-2"></div>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
 
-<header class="topbar">
-  <div class="brand">🧾 InvoicePro <span class="badge">Admin</span></div>
-  <button id="logoutBtn" class="btn ghost">Logout</button>
-</header>
+  <header class="topbar">
+    <div class="brand">🧾 InvoicePro <span class="badge">Admin</span></div>
+    <button id="logoutBtn" class="btn ghost">Logout</button>
+  </header>
 
-<nav class="tabs-nav">
-  <button class="tab-btn active" data-view="overview">📊 Overview</button>
-  <button class="tab-btn" data-view="invoices">🧾 Invoices</button>
-  <button class="tab-btn" data-view="products">📦 Products</button>
-  <button class="tab-btn" data-view="workers">👥 Workers</button>
-  <button class="tab-btn" data-view="settings">⚙️ Settings</button>
-</nav>
+  <nav class="tabs-nav">
+    <button class="tab-btn active" data-view="overview">📊 Overview</button>
+    <button class="tab-btn" data-view="invoices">🧾 Invoices</button>
+    <button class="tab-btn" data-view="products">📦 Products</button>
+    <button class="tab-btn" data-view="workers">👥 Workers</button>
+    <button class="tab-btn" data-view="settings">⚙️ Settings</button>
+  </nav>
 
-<main class="container">
+  <main class="container">
 
-  <section id="view-overview" class="view active">
-    <h2>Dashboard Overview</h2>
-    <div class="cards">
-      <div class="card"><div class="k">Total Sales</div><div class="v" id="statSales">₹0</div></div>
-      <div class="card"><div class="k">Invoices Today</div><div class="v" id="statToday">0</div></div>
-      <div class="card"><div class="k">Total Invoices</div><div class="v" id="statTotal">0</div></div>
-      <div class="card"><div class="k">Active Workers</div><div class="v" id="statWorkers">0</div></div>
-    </div>
-    <h3 style="margin-bottom:14px;font-size:16px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;">Recent Invoices</h3>
-    <div class="table-wrap">
-      <table id="recentTable">
-        <thead><tr><th>#</th><th>Customer</th><th>Total</th><th>By</th><th>Date</th></tr></thead>
-        <tbody></tbody>
-      </table>
-    </div>
-  </section>
-
-  <section id="view-invoices" class="view">
-    <h2>All Invoices</h2>
-    <div class="toolbar">
-      <input type="search" id="invSearch" placeholder="🔍 Search by customer or invoice #" />
-      <button class="btn primary" id="newInvoiceBtn">+ New Invoice</button>
-    </div>
-    <div class="table-wrap">
-      <table id="invoicesTable">
-        <thead><tr><th>#</th><th>Customer</th><th>Total</th><th>By</th><th>Date</th><th>Actions</th></tr></thead>
-        <tbody></tbody>
-      </table>
-    </div>
-  </section>
-
-  <section id="view-products" class="view">
-    <h2>Products</h2>
-    <form id="productForm" class="inline-form">
-      <input type="text" id="pName" placeholder="Product name" required />
-      <input type="number" id="pPrice" placeholder="Price" step="0.01" required />
-      <input type="number" id="pTax" placeholder="Tax %" step="0.01" value="0" />
-      <input type="number" id="pStock" placeholder="Stock" value="0" />
-      <button type="submit" class="btn primary">+ Add</button>
-    </form>
-    <div class="table-wrap">
-      <table id="productsTable">
-        <thead><tr><th>Name</th><th>Price</th><th>Tax %</th><th>Stock</th><th>Actions</th></tr></thead>
-        <tbody></tbody>
-      </table>
-    </div>
-  </section>
-
-  <section id="view-workers" class="view">
-    <h2>Workers & Permissions</h2>
-    <div class="table-wrap">
-      <table id="workersTable">
-        <thead>
-          <tr>
-            <th>Name</th><th>Email</th><th>Role</th>
-            <th>View Sales</th><th>Create Invoice</th><th>Manage Products</th>
-            <th>Active</th><th></th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
-  </section>
-
-<section id="view-settings" class="view">
-  <h2>Shop Settings</h2>
-  <form id="settingsForm" class="form-2col">
-    
-    <!-- LOGO UPLOAD -->
-    <div class="full logo-upload-section">
-      <label class="logo-label">Shop Logo</label>
-      <div class="logo-upload-box">
-        <div class="logo-preview" id="logoPreview">
-          <span class="logo-placeholder">📷</span>
+    <section id="view-overview" class="view active">
+      <h2>Dashboard Overview</h2>
+      <div class="cards">
+        <div class="card">
+          <div class="k">Total Sales</div>
+          <div class="v" id="statSales">₹0</div>
         </div>
-        <div class="logo-actions">
-          <input type="file" id="logoInput" accept="image/png,image/jpeg,image/webp" hidden />
-          <button type="button" class="btn primary" id="logoUploadBtn">📤 Upload Logo</button>
-          <button type="button" class="btn danger" id="logoRemoveBtn" style="display:none">🗑 Remove</button>
-          <p class="muted" style="margin-top:8px;font-size:12px;">
-            PNG, JPG ya WEBP • Max 2 MB • Recommended: 300x300 px
-          </p>
+        <div class="card">
+          <div class="k">Invoices Today</div>
+          <div class="v" id="statToday">0</div>
+        </div>
+        <div class="card">
+          <div class="k">Total Invoices</div>
+          <div class="v" id="statTotal">0</div>
+        </div>
+        <div class="card">
+          <div class="k">Active Workers</div>
+          <div class="v" id="statWorkers">0</div>
         </div>
       </div>
-    </div>
+      <h3
+        style="margin-bottom:14px;font-size:16px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;">
+        Recent Invoices</h3>
+      <div class="table-wrap">
+        <table id="recentTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Customer</th>
+              <th>Total</th>
+              <th>By</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
 
-    <label>Shop Name <input type="text" id="shopName" placeholder="My Shop" /></label>
-    <label>Phone <input type="text" id="shopPhone" placeholder="+92 300 1234567" /></label>
-    <label>Email <input type="email" id="shopEmail" placeholder="shop@example.com" /></label>
-    <label>GSTIN <input type="text" id="shopGstin" placeholder="1234567890" /></label>
-    <label class="full">Address <textarea id="shopAddress" rows="2" placeholder="Shop address"></textarea></label>
-    <button type="submit" class="btn primary">💾 Save Settings</button>
-  </form>
-</section>
+    <section id="view-invoices" class="view">
+      <h2>All Invoices</h2>
+      <div class="toolbar">
+        <input type="search" id="invSearch" placeholder="🔍 Search by customer or invoice #" />
+        <button class="btn primary" id="newInvoiceBtn">+ New Invoice</button>
+      </div>
+      <div class="table-wrap">
+        <table id="invoicesTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Customer</th>
+              <th>Total</th>
+              <th>By</th>
+              <th>Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
 
-</main>
+    <section id="view-products" class="view">
+      <h2>Products</h2>
+      <form id="productForm" class="inline-form">
+        <input type="text" id="pName" placeholder="Product name" required />
+        <input type="number" id="pPrice" placeholder="Price" step="0.01" required />
+        <input type="number" id="pTax" placeholder="Tax %" step="0.01" value="0" />
+        <input type="number" id="pStock" placeholder="Stock" value="0" />
+        <button type="submit" class="btn primary">+ Add</button>
+      </form>
+      <div class="table-wrap">
+        <table id="productsTable">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Price</th>
+              <th>Tax %</th>
+              <th>Stock</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
 
-<script type="module" src="js/admin.js"></script>
+    <section id="view-workers" class="view">
+      <h2>Users & Permissions</h2>
+      <div class="table-wrap">
+        <table id="workersTable">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>View Sales</th>
+              <th>Create Invoice</th>
+              <th>Manage Products</th>
+              <th>Active</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+    
+    <section id="view-settings" class="view">
+      <h2>Shop Settings</h2>
+      <form id="settingsForm" class="form-2col">
+
+        <!-- LOGO UPLOAD -->
+        <div class="full logo-upload-section">
+          <label class="logo-label">Shop Logo</label>
+          <div class="logo-upload-box">
+            <div class="logo-preview" id="logoPreview">
+              <span class="logo-placeholder">📷</span>
+            </div>
+            <div class="logo-actions">
+              <input type="file" id="logoInput" accept="image/png,image/jpeg,image/webp" hidden />
+              <button type="button" class="btn primary" id="logoUploadBtn">📤 Upload Logo</button>
+              <button type="button" class="btn danger" id="logoRemoveBtn" style="display:none">🗑 Remove</button>
+              <p class="muted" style="margin-top:8px;font-size:12px;">
+                PNG, JPG ya WEBP • Max 2 MB • Recommended: 300x300 px
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <label>Shop Name <input type="text" id="shopName" placeholder="My Shop" /></label>
+        <label>Phone <input type="text" id="shopPhone" placeholder="+92 300 1234567" /></label>
+        <label>Email <input type="email" id="shopEmail" placeholder="shop@example.com" /></label>
+        <label>GSTIN <input type="text" id="shopGstin" placeholder="1234567890" /></label>
+        <label class="full">Address <textarea id="shopAddress" rows="2" placeholder="Shop address"></textarea></label>
+        <button type="submit" class="btn primary">💾 Save Settings</button>
+      </form>
+    </section>
+
+  </main>
+
+  <script type="module" src="js/admin.js"></script>
 </body>
+
 </html>

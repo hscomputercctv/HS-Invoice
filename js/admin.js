@@ -143,35 +143,141 @@ $('productForm')?.addEventListener('submit', async (e) => {
 
 // ---------- WORKERS ----------
 async function loadWorkers() {
-  const { data } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .order('role', { ascending: true })
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Load users error:', error);
+    return;
+  }
+
   const tbody = $('workersTable').querySelector('tbody');
 
-  tbody.innerHTML = (data || []).map((u) => `
-    <tr>
-      <td>${escapeHtml(u.full_name)}</td>
+  tbody.innerHTML = (data || []).map((u) => {
+    const isMe = u.id === me.id;
+    const roleBadge = u.role === 'admin' 
+      ? '<span style="color:#f59e0b;font-weight:700">👑 Admin</span>' 
+      : '<span style="color:#10b981;font-weight:600">👤 Worker</span>';
+
+    return `
+    <tr data-user-id="${u.id}">
+      <td>${escapeHtml(u.full_name)} ${isMe ? '<span style="color:#6366f1;font-size:11px">(You)</span>' : ''}</td>
       <td>${escapeHtml(u.email)}</td>
-      <td>${u.role}</td>
+      <td>
+        ${isMe 
+          ? roleBadge  // khud ka role change nahi kar sakte
+          : `<select class="role-select" data-id="${u.id}" style="padding:6px 10px;border-radius:6px;background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--text);font-size:13px">
+              <option value="worker" ${u.role === 'worker' ? 'selected' : ''}>👤 Worker</option>
+              <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>👑 Admin</option>
+            </select>`
+        }
+      </td>
       <td><div class="toggle ${u.can_view_sales ? 'on' : ''}" data-perm="can_view_sales" data-id="${u.id}"></div></td>
       <td><div class="toggle ${u.can_create_invoice ? 'on' : ''}" data-perm="can_create_invoice" data-id="${u.id}"></div></td>
       <td><div class="toggle ${u.can_manage_products ? 'on' : ''}" data-perm="can_manage_products" data-id="${u.id}"></div></td>
       <td><div class="toggle ${u.is_active ? 'on' : ''}" data-perm="is_active" data-id="${u.id}"></div></td>
-      <td>${u.id === me.id ? '(you)' : ''}</td>
-    </tr>`).join('');
+      <td>
+        ${!isMe ? `<button class="btn danger" style="padding:6px 10px;min-height:auto;font-size:12px" data-del-user="${u.id}">🗑</button>` : ''}
+      </td>
+    </tr>`;
+  }).join('');
 
+  // ─── Permission Toggles ───
   tbody.querySelectorAll('.toggle').forEach((t) => {
     t.addEventListener('click', async () => {
-      const id = t.dataset.id, perm = t.dataset.perm;
+      const id = t.dataset.id;
+      const perm = t.dataset.perm;
       const val = !t.classList.contains('on');
-      const { error } = await supabase.from('profiles').update({ [perm]: val }).eq('id', id);
-      if (error) return alert(error.message);
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({ [perm]: val })
+        .eq('id', id);
+
+      if (error) {
+        alert('❌ ' + error.message);
+        return;
+      }
       t.classList.toggle('on', val);
+    });
+  });
+
+  // ─── Role Change Dropdown ───
+  tbody.querySelectorAll('.role-select').forEach((sel) => {
+    sel.addEventListener('change', async (e) => {
+      const id = e.target.dataset.id;
+      const newRole = e.target.value;
+      const row = tbody.querySelector(`tr[data-user-id="${id}"]`);
+      const userName = row.querySelector('td').textContent.trim();
+
+      if (!confirm(`"${userName}" ka role "${newRole}" kar dein?`)) {
+        // revert
+        e.target.value = newRole === 'admin' ? 'worker' : 'admin';
+        return;
+      }
+
+      // Admin count check — kam se kam 1 admin rahna chahiye
+      if (newRole === 'worker') {
+        const { count } = await supabase
+          .from('profiles')
+          .select('id', { count: 'exact', head: true })
+          .eq('role', 'admin');
+
+        if (count <= 1) {
+          alert('⚠️ Kam se kam ek admin hona chahiye!');
+          e.target.value = 'admin';
+          return;
+        }
+      }
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({ role: newRole })
+        .eq('id', id);
+
+      if (error) {
+        alert('❌ ' + error.message);
+        return;
+      }
+
+      alert(`✅ Role "${newRole}" set ho gaya!`);
+      
+      // Reload list taaki badge update ho
+      loadWorkers();
+    });
+  });
+
+  // ─── Delete User ───
+  tbody.querySelectorAll('[data-del-user]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.delUser;
+      const row = tbody.querySelector(`tr[data-user-id="${id}"]`);
+      const userName = row.querySelector('td').textContent.trim();
+
+      if (!confirm(`"${userName}" ko delete karein?\n\nNote: Ye sirf profile delete karega. Auth user ko Supabase Dashboard se delete karna padega.`)) return;
+
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        alert('❌ ' + error.message);
+        return;
+      }
+
+      alert('✅ User deleted');
+      loadWorkers();
     });
   });
 }
 
 // ---------- SETTINGS ----------
 async function loadShopSettings() {
-  $('shopName').value = me.shop_name || '';
+  $('shopName').value = me.shop_name || 'H.S Computers & CCTV';
   $('shopPhone').value = me.shop_phone || '';
   $('shopEmail').value = me.shop_email || '';
   $('shopGstin').value = me.shop_gstin || '';

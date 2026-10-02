@@ -19,14 +19,14 @@ let existingId = null;
 
   // Shop header fill karo
   // Logo show karo (agar hai)
-if (me.shop_logo_url) {
-  const logoEl = $('shopLogo');
-  if (logoEl) {
-    logoEl.src = me.shop_logo_url;
-    logoEl.classList.remove('hidden');
-    logoEl.onerror = () => logoEl.classList.add('hidden'); // fail safe
+  if (me.shop_logo_url) {
+    const logoEl = $('shopLogo');
+    if (logoEl) {
+      logoEl.src = me.shop_logo_url;
+      logoEl.classList.remove('hidden');
+      logoEl.onerror = () => logoEl.classList.add('hidden'); // fail safe
+    }
   }
-}
   $('shopNameDisplay').textContent = me.shop_name || 'H.S Computers & CCTV';
   $('shopAddrDisplay').textContent = me.shop_address || '';
   $('shopPhoneDisplay').textContent = me.shop_phone ? '📞 ' + me.shop_phone : '';
@@ -43,7 +43,32 @@ if (me.shop_logo_url) {
 
   if (existingId) {
     await loadExisting(existingId);
-    $('saveBtn').classList.add('hidden');
+
+    // Check karo — ye invoice current user ki hai?
+    const { data: inv } = await supabase
+      .from('invoices')
+      .select('created_by')
+      .eq('id', existingId)
+      .single();
+
+    const isOwner = inv?.created_by === me.id;
+    const isAdminUser = me.role === 'admin';
+
+    // Sirf owner ya admin hi edit kar sakte hain
+    if (!isOwner && !isAdminUser) {
+      // Worker doosre ki invoice dekh raha hai — sirf print
+      const saveBtn = $('saveBtn');
+      if (saveBtn) {
+        saveBtn.textContent = '👁 View Only';
+        saveBtn.disabled = true;
+        saveBtn.title = 'Ye invoice admin ki hai — sirf print kar sakte ho';
+        saveBtn.style.opacity = '0.5';
+        saveBtn.style.cursor = 'not-allowed';
+      }
+    } else {
+      // Owner ya admin — Save button hide karo (view mode)
+      $('saveBtn').classList.add('hidden');
+    }
   } else {
     $('invNo').textContent = generateInvoiceNumber();
     $('invDate').textContent = formatDate();

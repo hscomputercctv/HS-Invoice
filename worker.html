@@ -1,67 +1,99 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
-<meta name="theme-color" content="#10b981" />
-<title>Worker Dashboard — InvoicePro</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css" />
-<link rel="stylesheet" href="css/dashboard.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <meta name="theme-color" content="#10b981" />
+  <title>Worker Dashboard — InvoicePro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/dashboard.css" />
 </head>
+
 <body>
-<div class="orb orb-1"></div>
-<div class="orb orb-2"></div>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
 
-<header class="topbar">
-  <div class="brand">🧾 InvoicePro <span class="badge worker">Worker</span></div>
-  <button id="logoutBtn" class="btn ghost">Logout</button>
-</header>
+  <header class="topbar">
+    <div class="brand">🧾 InvoicePro <span class="badge worker">Worker</span></div>
+    <button id="logoutBtn" class="btn ghost">Logout</button>
+  </header>
 
-<nav class="tabs-nav">
-  <button class="tab-btn active" data-view="overview">📊 Overview</button>
-  <button class="tab-btn" data-view="invoices">🧾 My Invoices</button>
-  <button class="tab-btn hidden" data-view="products" id="navProducts">📦 Products</button>
-</nav>
+  <nav class="tabs-nav">
+    <button class="tab-btn active" data-view="overview">📊 Overview</button>
+    <button class="tab-btn" data-view="invoices">🧾 Invoices</button>
+    <button class="tab-btn hidden" data-view="products" id="navProducts">📦 Products</button>
+  </nav>
 
-<main class="container">
+  <main class="container">
 
-  <section id="view-overview" class="view active">
-    <h2>Welcome back, <span id="userName" style="font-weight:800">Worker</span> 👋</h2>
-    <div class="cards">
-      <div class="card"><div class="k">My Invoices Today</div><div class="v" id="wToday">0</div></div>
-      <div class="card"><div class="k">My Total Invoices</div><div class="v" id="wTotal">0</div></div>
-      <div class="card hidden" id="salesCard"><div class="k">My Sales</div><div class="v" id="wSales">₹0</div></div>
-    </div>
-    <div class="toolbar">
-      <button class="btn primary" id="newInvoiceBtn">+ Create New Invoice</button>
-    </div>
-  </section>
+    <section id="view-overview" class="view active">
+      <h2>Welcome back, <span id="userName" style="font-weight:800">Worker</span> 👋</h2>
+      <div class="cards">
+        <div class="card">
+          <div class="k">My Invoices Today</div>
+          <div class="v" id="wToday">0</div>
+        </div>
+        <div class="card">
+          <div class="k">My Total Invoices</div>
+          <div class="v" id="wTotal">0</div>
+        </div>
+        <div class="card hidden" id="salesCard">
+          <div class="k">My Sales</div>
+          <div class="v" id="wSales">₹0</div>
+        </div>
+      </div>
+      <div class="toolbar">
+        <button class="btn primary" id="newInvoiceBtn">+ Create New Invoice</button>
+      </div>
+    </section>
 
-  <section id="view-invoices" class="view">
-    <h2>My Invoices</h2>
-    <div class="table-wrap">
-      <table id="invoicesTable">
-        <thead><tr><th>#</th><th>Customer</th><th>Total</th><th>Date</th><th>Actions</th></tr></thead>
-        <tbody></tbody>
-      </table>
-    </div>
-  </section>
+    <section id="view-invoices" class="view">
+      <h2>All Invoices</h2>
+      <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px">
+        Aapke aur admin ke sab invoices yahan dikhte hain. Kisi bhi invoice ko khol ke print kar sakte ho.
+      </p>
+      <div class="table-wrap">
+        <table id="invoicesTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Customer</th>
+              <th>Total</th>
+              <th>By</th>
+              <th>Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
 
-  <section id="view-products" class="view">
-    <h2>Products</h2>
-    <div class="table-wrap">
-      <table id="productsTable">
-        <thead><tr><th>Name</th><th>Price</th><th>Tax %</th><th>Stock</th></tr></thead>
-        <tbody></tbody>
-      </table>
-    </div>
-  </section>
+    <section id="view-products" class="view">
+      <h2>Products</h2>
+      <div class="table-wrap">
+        <table id="productsTable">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Price</th>
+              <th>Tax %</th>
+              <th>Stock</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
 
-</main>
+  </main>
 
-<script type="module" src="js/worker.js"></script>
+  <script type="module" src="js/worker.js"></script>
 </body>
+
 </html>

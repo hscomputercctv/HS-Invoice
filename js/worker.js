@@ -40,40 +40,61 @@ let me = null;
 })();
 
 async function loadMyInvoices() {
-  const { data } = await supabase
-    .from('invoices').select('*')
-    .eq('created_by', me.id)
+  // Saare invoices fetch karo (apni + admin ki + doosre workers ki)
+  const { data, error } = await supabase
+    .from('invoices')
+    .select('*')
     .order('created_at', { ascending: false });
 
-  const list = data || [];
-  const today = new Date(); today.setHours(0, 0, 0, 0);
-  const todayCount = list.filter((i) => new Date(i.created_at) >= today).length;
-
-  $('wToday').textContent = todayCount;
-  $('wTotal').textContent = list.length;
-  if (me.can_view_sales) {
-    $('wSales').textContent = formatMoney(list.reduce((s, i) => s + Number(i.grand_total || 0), 0));
+  if (error) {
+    console.error('Load invoices error:', error);
+    return;
   }
 
+  const allInvoices = data || [];
+
+  // ─── Stats ───
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const myInvoices = allInvoices.filter((i) => i.created_by === me.id);
+  const myTodayInvoices = myInvoices.filter((i) => new Date(i.created_at) >= today);
+
+  $('wToday').textContent = myTodayInvoices.length;
+  $('wTotal').textContent = myInvoices.length;
+
+  if (me.can_view_sales) {
+    $('wSales').textContent = formatMoney(
+      myInvoices.reduce((s, i) => s + Number(i.grand_total || 0), 0)
+    );
+  }
+
+  // ─── Table Render ───
   const tbody = $('invoicesTable').querySelector('tbody');
-  tbody.innerHTML = list.map((i) => `
+
+  if (!allInvoices.length) {
+    tbody.innerHTML = `<tr><td colspan="6" class="muted" style="text-align:center;padding:20px">Koi invoice nahi hai. "+ Create New Invoice" dabao.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = allInvoices.map((i) => {
+    const isMine = i.created_by === me.id;
+    const badge = isMine
+      ? `<span style="color:#10b981;font-size:11px;font-weight:700">👤 MY</span>`
+      : `<span style="color:#6366f1;font-size:11px;font-weight:700">👑 ADMIN</span>`;
+
+    return `
     <tr>
       <td>${escapeHtml(i.invoice_number)}</td>
       <td>${escapeHtml(i.customer_name)}</td>
       <td>${formatMoney(i.grand_total)}</td>
+      <td>${escapeHtml(i.created_by_name || '-')} ${badge}</td>
       <td>${formatDate(i.created_at)}</td>
-      <td><button class="btn" onclick="window.location.href='invoice.html?id=${i.id}'">View</button></td>
-    </tr>`).join('') || `<tr><td colspan="5" class="muted">No invoices yet</td></tr>`;
-}
-
-async function loadProducts() {
-  const { data } = await supabase.from('products').select('*').eq('is_active', true);
-  const tbody = $('productsTable').querySelector('tbody');
-  tbody.innerHTML = (data || []).map((p) => `
-    <tr>
-      <td>${escapeHtml(p.name)}</td>
-      <td>${formatMoney(p.price)}</td>
-      <td>${p.tax_percent}%</td>
-      <td>${p.stock}</td>
-    </tr>`).join('') || `<tr><td colspan="4" class="muted">No products</td></tr>`;
+      <td>
+        <button class="btn" style="padding:6px 12px;min-height:auto;font-size:12px" onclick="window.location.href='invoice.html?id=${i.id}'">
+          🖨 View
+        </button>
+      </td>
+    </tr>`;
+  }).join('');
 }
