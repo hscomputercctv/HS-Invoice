@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+<meta name="theme-color" content="#6366f1" />
+<title>Create Invoice — InvoicePro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css" />
+<link rel="stylesheet" href="css/invoice.css" />
+</head>
+<body>
+
+<div class="invoice-toolbar no-print">
+  <button class="btn ghost" onclick="history.back()">← Back</button>
+  <div>
+    <button class="btn primary" id="saveBtn">💾 Save Invoice</button>
+    <button class="btn" id="printBtn">🖨 Print / PDF</button>
+  </div>
+</div>
+
+<div id="invoicePage" class="invoice-page">
+
+<div class="inv-header">
+  <div class="inv-shop-info">
+    <img id="shopLogo" class="inv-logo hidden" alt="Shop Logo" />
+    <div>
+      <h1 id="shopNameDisplay">My Shop</h1>
+      <p id="shopAddrDisplay"></p>
+      <p><span id="shopPhoneDisplay"></span> <span id="shopEmailDisplay"></span></p>
+      <p id="shopGstinDisplay" style="font-weight:600;color:#6366f1"></p>
+    </div>
+  </div>
+  <div class="inv-meta">
+    <h2>INVOICE</h2>
+    <p><strong>#</strong> <span id="invNo"></span></p>
+    <p><strong>Date:</strong> <span id="invDate"></span></p>
+    <p><strong>By:</strong> <span id="invBy"></span></p>
+  </div>
+</div>
+
+  <div class="inv-customer">
+    <h3>Bill To</h3>
+    <input class="no-print" id="custName" placeholder="Customer name *" />
+    <input class="no-print" id="custPhone" placeholder="Phone number" />
+    <textarea class="no-print" id="custAddr" placeholder="Address" rows="2"></textarea>
+    <input class="no-print" id="custGstin" placeholder="GSTIN (optional)" />
+    <div class="print-only">
+      <p><strong id="custNameP"></strong></p>
+      <p id="custPhoneP"></p>
+      <p id="custAddrP"></p>
+      <p id="custGstinP"></p>
+    </div>
+  </div>
+
+  <table class="inv-table">
+    <thead>
+      <tr>
+        <th style="width:40px">#</th>
+        <th>Item Description</th>
+        <th style="width:70px">Qty</th>
+        <th style="width:90px">Price</th>
+        <th style="width:70px">Tax %</th>
+        <th style="width:100px">Total</th>
+        <th class="no-print" style="width:50px"></th>
+      </tr>
+    </thead>
+    <tbody id="itemsBody"></tbody>
+  </table>
+
+  <button class="btn primary no-print" id="addItemBtn" style="margin-top:12px">+ Add Item</button>
+
+  <div class="inv-totals">
+    <div><span>Subtotal</span> <span id="subtotal">₹0.00</span></div>
+    <div><span>Tax</span> <span id="taxTotal">₹0.00</span></div>
+    <div>
+      <span>Discount</span>
+      <input class="no-print small-input" type="number" id="discount" value="0" step="0.01" />
+      <span class="print-only" id="discountP">₹0.00</span>
+    </div>
+    <div class="grand"><span>Grand Total</span> <span id="grandTotal">₹0.00</span></div>
+  </div>
+
+  <div class="inv-footer">
+    <label>Payment Mode
+      <select id="paymentMode" class="no-print">
+        <option>Cash</option><option>UPI</option><option>Card</option><option>Bank Transfer</option>
+      </select>
+    </label>
+    <label>Notes
+      <textarea id="notes" class="no-print" rows="2" placeholder="Any notes for this invoice..."></textarea>
+    </label>
+  </div>
+
+  <p class="thanks">✨ Thank you for your business! ✨</p>
+</div>
+
+<script type="module" src="js/invoice.js"></script>
+</body>
+</html>

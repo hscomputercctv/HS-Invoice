@@ -1,0 +1,331 @@
+/* ============================================
+   INVOICE PAGE — ANIMATED + PRINT READY
+   ============================================ */
+.invoice-toolbar {
+  max-width: 900px;
+  margin: 20px auto;
+  padding: 0 16px;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  animation: fadeInUp 0.5s ease;
+  position: relative;
+  z-index: 10;
+}
+.invoice-toolbar > div { display: flex; gap: 10px; flex-wrap: wrap; }
+
+.invoice-page {
+  max-width: 820px;
+  margin: 20px auto 60px;
+  background: #ffffff;
+  color: #1f2937;
+  padding: 44px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  position: relative;
+  overflow: hidden;
+  animation: fadeInUp 0.6s ease 0.1s backwards;
+  z-index: 1;
+}
+
+.invoice-page::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 6px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6, #ec4899);
+  background-size: 200% 200%;
+  animation: gradientShift 4s ease infinite;
+}
+
+/* HEADER */
+.inv-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 22px;
+  margin-bottom: 26px;
+  animation: fadeInUp 0.5s ease 0.15s backwards;
+}
+.inv-header h1 {
+  font-size: 26px;
+  font-weight: 800;
+  margin-bottom: 8px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.5px;
+}
+.inv-header p { font-size: 13px; color: #4b5563; margin-bottom: 2px; }
+
+.inv-meta { text-align: right; }
+.inv-meta h2 {
+  font-size: 32px;
+  font-weight: 900;
+  letter-spacing: 3px;
+  background: linear-gradient(135deg, #6366f1, #ec4899);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 10px;
+}
+.inv-meta p { font-size: 13px; margin-top: 4px; color: #4b5563; }
+.inv-meta strong { color: #1f2937; }
+
+/* CUSTOMER */
+.inv-customer {
+  margin-bottom: 26px;
+  padding: 20px;
+  background: linear-gradient(135deg, #f9fafb, #f3f4f6);
+  border-radius: 12px;
+  border-left: 4px solid #6366f1;
+  animation: slideInLeft 0.5s ease 0.25s backwards;
+}
+.inv-customer h3 {
+  font-size: 12px;
+  text-transform: uppercase;
+  color: #6366f1;
+  margin-bottom: 12px;
+  letter-spacing: 1px;
+  font-weight: 800;
+}
+.inv-customer input, .inv-customer textarea {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  color: #1f2937;
+  margin-bottom: 8px;
+}
+.inv-customer input::placeholder, .inv-customer textarea::placeholder { color: #9ca3af; }
+.inv-customer input:focus, .inv-customer textarea:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
+  background: #fff;
+}
+
+/* ITEMS TABLE */
+.inv-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 16px;
+  border-radius: 10px;
+  overflow: hidden;
+  animation: fadeInUp 0.5s ease 0.3s backwards;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+.inv-table th, .inv-table td {
+  border-bottom: 1px solid #e5e7eb;
+  padding: 12px;
+  font-size: 13px;
+  text-align: left;
+}
+.inv-table th {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: #fff;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.8px;
+  border: none;
+}
+.inv-table tbody tr { transition: background 0.2s; }
+.inv-table tbody tr:hover { background: rgba(99,102,241,0.05); }
+.inv-table input {
+  border: none;
+  padding: 8px;
+  background: transparent;
+  width: 100%;
+  font-size: 13px;
+  color: #1f2937;
+  border-radius: 6px;
+  transition: var(--transition);
+}
+.inv-table input:focus {
+  box-shadow: none;
+  background: rgba(99,102,241,0.08);
+  outline: 1px dashed #6366f1;
+}
+.inv-table .line-total {
+  font-weight: 700;
+  color: #6366f1;
+  font-size: 14px;
+}
+
+/* TOTALS */
+.inv-totals {
+  margin-left: auto;
+  max-width: 340px;
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 20px;
+  background: linear-gradient(135deg, #f9fafb, #f3f4f6);
+  border-radius: 12px;
+  animation: slideInRight 0.5s ease 0.35s backwards;
+}
+.inv-totals > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  padding: 6px 0;
+  color: #4b5563;
+}
+.inv-totals .grand {
+  border-top: 2px solid #6366f1;
+  padding-top: 14px;
+  margin-top: 8px;
+  font-size: 20px;
+  font-weight: 800;
+  color: #1f2937;
+}
+.inv-totals .grand span:last-child {
+  background: linear-gradient(135deg, #6366f1, #ec4899);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.small-input {
+  width: 100px !important;
+  padding: 6px 10px !important;
+  text-align: right;
+  background: #fff !important;
+  border: 1px solid #e5e7eb !important;
+  color: #1f2937 !important;
+  font-size: 13px;
+}
+
+/* FOOTER */
+.inv-footer {
+  margin-top: 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  animation: fadeInUp 0.5s ease 0.4s backwards;
+}
+.inv-footer label {
+  font-size: 13px;
+  color: #6b7280;
+  font-weight: 500;
+}
+.inv-footer select, .inv-footer textarea {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  color: #1f2937;
+  margin-top: 6px;
+}
+
+.thanks {
+  text-align: center;
+  margin-top: 30px;
+  font-style: italic;
+  color: #9ca3af;
+  font-size: 14px;
+  padding-top: 20px;
+  border-top: 1px dashed #e5e7eb;
+}
+
+.print-only { display: none; }
+
+/* ============================================
+   PRINT — A4 PERFECT
+   ============================================ */
+@media print {
+  @page { size: A4; margin: 12mm; }
+
+  html, body {
+    background: #fff !important;
+    color: #000 !important;
+    font-size: 12px;
+  }
+  body::before, .orb, .invoice-page::before { display: none !important; }
+
+  .no-print, .no-print * { display: none !important; }
+  .print-only { display: block !important; }
+
+  .invoice-page {
+    max-width: 100%;
+    margin: 0;
+    box-shadow: none;
+    padding: 0;
+    border-radius: 0;
+    animation: none;
+  }
+  .inv-header, .inv-customer, .inv-table, .inv-totals, .inv-footer {
+    animation: none;
+  }
+  .inv-header h1, .inv-meta h2, .inv-totals .grand span:last-child {
+    -webkit-text-fill-color: #000 !important;
+    color: #000 !important;
+  }
+  .inv-table th {
+    background: #333 !important;
+    color: #fff !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .inv-customer { background: #f5f5f5 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .inv-totals { background: #f5f5f5 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  input, textarea, select {
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    color: #000 !important;
+    padding: 0 !important;
+  }
+}
+
+/* MOBILE */
+@media (max-width: 700px) {
+  .invoice-page { padding: 24px 18px; margin: 12px; border-radius: 12px; }
+  .inv-header { flex-direction: column; }
+  .inv-meta { text-align: left; }
+  .inv-table th, .inv-table td { padding: 8px 6px; font-size: 12px; }
+  .inv-meta h2 { font-size: 24px; }
+  .inv-header h1 { font-size: 20px; }
+  .inv-totals { max-width: 100%; }
+  .invoice-toolbar { flex-direction: column; }
+}
+
+
+/* ============================================
+   SHOP LOGO
+   ============================================ */
+.inv-shop-info {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  flex: 1;
+}
+.inv-logo {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  border-radius: 10px;
+  flex-shrink: 0;
+  background: #fff;
+  padding: 6px;
+  border: 1px solid #e5e7eb;
+}
+.inv-logo.hidden {
+  display: none !important;
+}
+
+@media print {
+  .inv-logo {
+    width: 70px;
+    height: 70px;
+    border: none;
+    padding: 0;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
+@media (max-width: 700px) {
+  .inv-shop-info { gap: 10px; }
+  .inv-logo { width: 60px; height: 60px; }
+}
