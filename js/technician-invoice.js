@@ -18,7 +18,7 @@ let isAdminUser = false;
 // INIT
 // ============================================
 (async () => {
-  // 1) Auth check — admin ya technician allowed
+  // Auth check — admin ya technician allowed
   const ctx = await requireAuth(supabase);
   if (!ctx) return;
   me = ctx.profile;
@@ -31,13 +31,13 @@ let isAdminUser = false;
 
   isAdminUser = me.role === 'admin';
 
-  // 2) Shop header fill karo
+  // Shop header fill karo
   $('shopNameDisplay').textContent = me.shop_name || 'H.S Computers & CCTV';
   $('shopAddrDisplay').textContent = me.shop_address || '';
   $('shopPhoneDisplay').textContent = me.shop_phone ? '📞 ' + me.shop_phone : '';
   $('shopEmailDisplay').textContent = me.shop_email ? '✉️ ' + me.shop_email : '';
 
-  // 3) Logo load
+  // Logo
   if (me.shop_logo_url) {
     const logoEl = $('shopLogo');
     if (logoEl) {
@@ -47,14 +47,14 @@ let isAdminUser = false;
     }
   }
 
-  // 4) URL check — existing ya naya?
+  // URL check
   const params = new URLSearchParams(location.search);
   existingId = params.get('id');
 
   if (existingId) {
     await loadExisting(existingId);
   } else {
-    // Naya invoice — sirf technician bana sakta hai
+    // Naya invoice — sirf technician
     if (me.role !== 'technician') {
       alert('⚠️ Sirf technician naya invoice bana sakta hai.');
       window.location.href = 'admin.html';
@@ -63,10 +63,7 @@ let isAdminUser = false;
     setupNewInvoice();
   }
 
-  // 5) Event bindings
   bindEvents();
-
-  // 6) Initial sync
   syncPrintFields();
 })();
 
@@ -103,22 +100,19 @@ async function loadExisting(id) {
 
   isOwner = inv.technician_id === me.id;
 
-  // Access check — owner ya admin
   if (!isOwner && !isAdminUser) {
     alert('⚠️ Aap sirf apni invoices dekh sakte hain.');
     window.location.href = 'technician.html';
     return;
   }
 
-  // Fill header
+  // Header
   $('invNo').textContent = inv.invoice_number;
   $('invDate').textContent = formatDate(inv.created_at);
   $('invBy').textContent = inv.technician_name || '-';
 
-  // Fill customer info
+  // Customer + Service (NO address, NO phone)
   $('custName').value = inv.customer_name || '';
-  $('custPhone').value = inv.customer_phone || '';
-  $('custAddr').value = inv.customer_address || '';
   $('serviceType').value = inv.service_type || '';
 
   const serviceDateEl = $('serviceDate');
@@ -153,15 +147,12 @@ async function loadExisting(id) {
 
   renderItems();
 
-  // ─── Button visibility based on role ───
+  // Buttons based on role
   const saveBtn = $('saveBtn');
-  const addItemBtn = $('addItemBtn');
 
   if (isOwner) {
-    // Owner apni invoice dekh raha hai — Save hide (already saved)
     if (saveBtn) saveBtn.classList.add('hidden');
   } else if (isAdminUser) {
-    // Admin dekh raha hai — sirf View Only
     if (saveBtn) {
       saveBtn.textContent = '👁 View Only';
       saveBtn.disabled = true;
@@ -169,7 +160,6 @@ async function loadExisting(id) {
       saveBtn.style.opacity = '0.5';
       saveBtn.style.cursor = 'not-allowed';
     }
-    // Edit disable
     disableAllEditing();
   }
 }
@@ -178,7 +168,6 @@ async function loadExisting(id) {
 // DISABLE EDITING (Admin View Mode)
 // ============================================
 function disableAllEditing() {
-  // Sab inputs disabled
   const inputs = document.querySelectorAll('.invoice-page input, .invoice-page textarea, .invoice-page select');
   inputs.forEach((el) => {
     if (!el.classList.contains('no-print')) return;
@@ -187,14 +176,11 @@ function disableAllEditing() {
     el.style.cursor = 'not-allowed';
   });
 
-  // Add item button hide
   const addBtn = $('addItemBtn');
   if (addBtn) addBtn.style.display = 'none';
 
-  // Remove item buttons hide
   document.querySelectorAll('[data-rm]').forEach((b) => b.style.display = 'none');
 
-  // Discount input disabled
   const disc = $('discount');
   if (disc) disc.disabled = true;
 }
@@ -203,23 +189,19 @@ function disableAllEditing() {
 // EVENT BINDINGS
 // ============================================
 function bindEvents() {
-  // Add item
   $('addItemBtn')?.addEventListener('click', () => addItem());
 
-  // Recalc triggers
   ['discount', 'laborCharge', 'travelExpense', 'otherExpense'].forEach((id) => {
     $(id)?.addEventListener('input', recalc);
   });
 
-  // Print sync triggers
-  ['otherExpenseNote', 'serviceDate', 'custName', 'custPhone', 'custAddr', 'serviceType'].forEach((id) => {
+  ['otherExpenseNote', 'serviceDate', 'custName', 'serviceType'].forEach((id) => {
     $(id)?.addEventListener('input', syncPrintFields);
+    $(id)?.addEventListener('change', syncPrintFields);
   });
 
-  // Save
   $('saveBtn')?.addEventListener('click', saveInvoice);
 
-  // Print
   $('printBtn')?.addEventListener('click', () => {
     syncPrintFields();
     setTimeout(() => window.print(), 100);
@@ -227,7 +209,7 @@ function bindEvents() {
 }
 
 // ============================================
-// ITEMS MANAGEMENT
+// ITEMS
 // ============================================
 function addItem(data = { name: '', qty: 1, price: 0 }) {
   items.push({ ...data });
@@ -262,7 +244,6 @@ function renderItems() {
     </tr>
   `).join('');
 
-  // Input listeners
   body.querySelectorAll('input').forEach((inp) => {
     inp.addEventListener('input', (e) => {
       const i = +e.target.dataset.idx;
@@ -272,7 +253,6 @@ function renderItems() {
     });
   });
 
-  // Remove buttons
   body.querySelectorAll('[data-rm]').forEach((b) => {
     b.addEventListener('click', () => {
       items.splice(+b.dataset.rm, 1);
@@ -290,7 +270,7 @@ function lineTotal(it) {
 }
 
 // ============================================
-// RECALCULATE TOTALS
+// RECALC
 // ============================================
 function recalc() {
   const body = $('itemsBody');
@@ -321,26 +301,20 @@ function recalc() {
 }
 
 // ============================================
-// SYNC PRINT-ONLY FIELDS
+// SYNC PRINT FIELDS
 // ============================================
 function syncPrintFields() {
   setText('custNameP', $('custName')?.value);
-  setText('custPhoneP', $('custPhone')?.value);
-  setText('custAddrP', $('custAddr')?.value);
   setText('serviceTypeP', $('serviceType')?.value);
 
   const serviceDateVal = $('serviceDate')?.value;
   setText('serviceDateP', serviceDateVal ? formatDate(serviceDateVal) : '');
 
-  setText('laborChargeP', formatMoney($('laborCharge')?.value || 0));
-  setText('travelExpenseP', formatMoney($('travelExpense')?.value || 0));
-  setText('otherExpenseP', formatMoney($('otherExpense')?.value || 0));
-  setText('otherExpenseNoteP', $('otherExpenseNote')?.value || '');
   setText('paymentModeP', $('paymentMode')?.value || '');
   setText('paymentStatusP', $('paymentStatus')?.value || '');
 
   // Hide empty print fields
-  ['custPhoneP', 'custAddrP', 'serviceTypeP', 'serviceDateP', 'otherExpenseNoteP'].forEach((id) => {
+  ['serviceTypeP', 'serviceDateP'].forEach((id) => {
     const el = $(id);
     if (el) el.style.display = el.textContent.trim() ? 'block' : 'none';
   });
@@ -355,7 +329,6 @@ function setText(id, val) {
 // SAVE INVOICE
 // ============================================
 async function saveInvoice() {
-  // Owner only (admin view mode me disabled hai)
   if (isAdminUser && !isOwner) {
     return alert('⚠️ Admin sirf view/print kar sakta hai.');
   }
@@ -383,8 +356,6 @@ async function saveInvoice() {
 
   const payload = {
     customer_name: custName,
-    customer_phone: $('custPhone').value,
-    customer_address: $('custAddr').value,
     service_type: $('serviceType').value,
     service_date: $('serviceDate').value || new Date().toISOString().split('T')[0],
     parts_total: partsTotal,
@@ -404,7 +375,6 @@ async function saveInvoice() {
 
   let invoiceId;
 
-  // ─── Update (existing) ───
   if (existingId && isOwner) {
     const { error } = await supabase
       .from('technician_invoices')
@@ -419,9 +389,7 @@ async function saveInvoice() {
 
     invoiceId = existingId;
     await supabase.from('technician_invoice_items').delete().eq('invoice_id', invoiceId);
-  }
-  // ─── Insert (new) ───
-  else {
+  } else {
     let inserted = false;
 
     for (let attempt = 0; attempt < 5; attempt++) {
@@ -456,7 +424,6 @@ async function saveInvoice() {
     }
   }
 
-  // ─── Insert items ───
   if (validItems.length) {
     const itemRows = validItems.map((i) => ({
       invoice_id: invoiceId,
@@ -485,7 +452,7 @@ async function saveInvoice() {
 }
 
 // ============================================
-// REDIRECT BACK
+// REDIRECT
 // ============================================
 function redirectBack() {
   if (me.role === 'admin') {

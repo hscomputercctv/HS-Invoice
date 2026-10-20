@@ -373,3 +373,43 @@ tr:last-child td { border-bottom: none; }
   .logo-upload-box { flex-direction: column; align-items: flex-start; }
   .logo-actions { width: 100%; }
 }
+
+
+/* ============================================
+   STATUS SELECT — VISIBLE FIX
+   ============================================ */
+.status-select {
+  background: rgba(255,255,255,0.08) !important;
+  color: var(--text) !important;
+  border: 1px solid var(--border) !important;
+  padding: 6px 10px !important;
+  border-radius: 6px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 12px;
+  padding-right: 28px !important;
+}
+
+/* Dropdown options dark theme me */
+.status-select option {
+  background: #1e293b !important;
+  color: #f1f5f9 !important;
+  padding: 8px !important;
+}
+
+/* Status colors override (dynamic) */
+.status-select[data-status="Paid"] {
+  color: #10b981 !important;
+}
+.status-select[data-status="Partial"] {
+  color: #f59e0b !important;
+}
+.status-select[data-status="Pending"] {
+  color: #ef4444 !important;
+}

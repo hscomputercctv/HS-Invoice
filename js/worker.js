@@ -1,10 +1,5 @@
 import { supabase } from './supabase-config.js';
-import { 
-  formatMoney, 
-  formatDate, 
-  requireAuth, 
-  escapeHtml 
-} from './utils.js';
+import { formatMoney, formatDate, requireAuth, escapeHtml } from './utils.js';
 
 const $ = (id) => document.getElementById(id);
 let me = null;
@@ -17,24 +12,17 @@ let me = null;
   if (!ctx) return;
   me = ctx.profile;
 
-  // ─── Greeting ───
   $('userName').textContent = me.full_name;
 
-  // ─── Logout ───
   $('logoutBtn').addEventListener('click', async () => {
     await supabase.auth.signOut();
     window.location.href = 'index.html';
   });
 
-  // ─── Permission-based UI ───
   if (me.can_view_sales) {
     $('salesCard').classList.remove('hidden');
   }
-  if (me.can_manage_products) {
-    $('navProducts').classList.remove('hidden');
-  }
 
-  // ─── Tabs ───
   document.querySelectorAll('.tab-btn').forEach((b) => {
     b.addEventListener('click', () => {
       document.querySelectorAll('.tab-btn').forEach((x) => x.classList.remove('active'));
@@ -44,7 +32,6 @@ let me = null;
     });
   });
 
-  // ─── New Invoice Button ───
   $('newInvoiceBtn').addEventListener('click', () => {
     if (!me.can_create_invoice) {
       return alert('⚠️ Aapko invoice banane ki permission nahi hai. Admin se contact karein.');
@@ -52,20 +39,13 @@ let me = null;
     window.location.href = 'invoice.html';
   });
 
-  // ─── Load Data ───
   await loadInvoices();
-
-  if (me.can_manage_products) {
-    await loadProducts();
-  }
 })();
 
 // ============================================
-// LOAD INVOICES — FIX 4 APPLIED
+// LOAD INVOICES
 // ============================================
 async function loadInvoices() {
-  // Sab invoices fetch karo — RLS policy "select_all" ki wajah se
-  // Worker apni + admin ki + doosre workers ki sab dekh sakta hai
   const { data, error } = await supabase
     .from('invoices')
     .select('*')
@@ -78,7 +58,6 @@ async function loadInvoices() {
 
   const allInvoices = data || [];
 
-  // ─── Stats ───
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -94,14 +73,13 @@ async function loadInvoices() {
     );
   }
 
-  // ─── Table Render ───
   const tbody = $('invoicesTable').querySelector('tbody');
 
   if (!allInvoices.length) {
     tbody.innerHTML = `
       <tr>
         <td colspan="6" class="muted" style="text-align:center;padding:20px">
-          Koi invoice nahi hai. "+ Create New Invoice" dabao.
+          Koi invoice nahi hai.
         </td>
       </tr>`;
     return;
@@ -129,41 +107,4 @@ async function loadInvoices() {
         </td>
       </tr>`;
   }).join('');
-}
-
-// ============================================
-// LOAD PRODUCTS — FIX 4 (only active)
-// ============================================
-async function loadProducts() {
-  const { data, error } = await supabase
-    .from('products')
-    .select('*')
-    .eq('is_active', true)            // 👈 Sirf active products
-    .order('name', { ascending: true });
-
-  if (error) {
-    console.error('Load products error:', error);
-    return;
-  }
-
-  const tbody = $('productsTable').querySelector('tbody');
-
-  if (!data || data.length === 0) {
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="4" class="muted" style="text-align:center;padding:20px">
-          Koi products nahi hain. Admin se contact karein.
-        </td>
-      </tr>`;
-    return;
-  }
-
-  tbody.innerHTML = data.map((p) => `
-    <tr>
-      <td>${escapeHtml(p.name)}</td>
-      <td>${formatMoney(p.price)}</td>
-      <td>${p.tax_percent}%</td>
-      <td>${p.stock}</td>
-    </tr>
-  `).join('');
 }

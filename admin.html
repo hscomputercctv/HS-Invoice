@@ -1,236 +1,328 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
-  <meta name="theme-color" content="#6366f1" />
-  <title>Admin Dashboard — InvoicePro</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
-    rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css" />
-  <link rel="stylesheet" href="css/dashboard.css" />
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+<meta name="theme-color" content="#6366f1" />
+<title>Admin Dashboard — H.S Computers & CCTV</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css" />
+<link rel="stylesheet" href="css/dashboard.css" />
+<style>
+  #notifBell { position: relative; }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.85; transform: scale(1.05); }
+  }
+</style>
 </head>
-
 <body>
-  <div class="orb orb-1"></div>
-  <div class="orb orb-2"></div>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
 
-  <header class="topbar">
-    <div class="brand">🧾 InvoicePro <span class="badge">Admin</span></div>
+<header class="topbar">
+  <div class="brand">🧾 InvoicePro <span class="badge">Admin</span></div>
+  
+  <div style="display:flex;gap:10px;align-items:center">
+    <!-- Notification Bell -->
+    <div class="notif-wrapper" style="position:relative">
+      <button id="notifBell" class="btn ghost" style="padding:8px 12px">
+        🔔
+        <span id="notifBadge" style="
+          position:absolute;top:-4px;right:-4px;
+          background:#ef4444;color:#fff;font-size:10px;font-weight:700;
+          min-width:18px;height:18px;border-radius:99px;
+          display:none;align-items:center;justify-content:center;
+          padding:0 4px;animation:pulse 2s ease infinite;
+        ">0</span>
+      </button>
+      
+      <div id="notifDropdown" style="
+        position:absolute;top:calc(100% + 8px);right:0;
+        width:340px;max-height:420px;overflow-y:auto;
+        background:rgba(30,41,59,0.98);backdrop-filter:blur(20px);
+        border:1px solid var(--border);border-radius:14px;
+        box-shadow:0 20px 40px rgba(0,0,0,0.4);
+        display:none;z-index:1000;
+      ">
+        <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:inherit;z-index:2">
+          <strong style="font-size:14px">🔔 Notifications</strong>
+          <button id="markAllReadBtn" style="background:none;border:none;color:var(--primary-light);font-size:12px;cursor:pointer;padding:0;font-weight:600">Mark all read</button>
+        </div>
+        <div id="notifList" style="padding:4px">
+          <div style="text-align:center;padding:30px;color:var(--text-muted);font-size:13px">Loading...</div>
+        </div>
+      </div>
+    </div>
+    
     <button id="logoutBtn" class="btn ghost">Logout</button>
-  </header>
+  </div>
+</header>
 
- <nav class="tabs-nav">
+<nav class="tabs-nav">
   <button class="tab-btn active" data-view="overview">📊 Overview</button>
   <button class="tab-btn" data-view="invoices">🧾 Customer Invoices</button>
   <button class="tab-btn" data-view="tech-invoices">🔧 Technician Invoices</button>
-  <button class="tab-btn" data-view="products">📦 Products</button>
-  <button class="tab-btn" data-view="workers">👥 Workers</button>
-  <button class="tab-btn" data-view="pending" id="pendingTab">
-    ⏳ Pending <span id="pendingCount" style="background:#ef4444;color:#fff;padding:2px 8px;border-radius:99px;font-size:11px;margin-left:6px;display:none">0</span>
-  </button>
+  <button class="tab-btn" onclick="window.location.href='credit.html'" style="color:#f59e0b">💳 Credit Khata</button>
+  <button class="tab-btn" data-view="workers">👥 All Users</button>
+  <button class="tab-btn" data-view="create-user">➕ Create User</button> <!-- NEW TAB -->
   <button class="tab-btn" data-view="settings">⚙️ Settings</button>
 </nav>
 
-  <main class="container">
-    <section id="view-tech-invoices" class="view">
-      <h2>🔧 Technician Invoices</h2>
-      <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px">
-        Saare technicians ki invoices yahan dikhti hain. Kis ne kitna kaam kiya, kitna charge kiya, sab record.
-      </p>
-      <div class="toolbar">
-        <input type="search" id="techSearch" placeholder="🔍 Search technician or customer" />
-      </div>
-      <div class="table-wrap">
-        <table id="techInvoicesTable">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Technician</th>
-              <th>Customer</th>
-              <th>Service</th>
-              <th>Total</th>
-              <th>Status</th>
-              <th>Date</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </section>
-    <section id="view-pending" class="view">
-      <h2>⏳ Pending Approvals</h2>
-      <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px">
-        Ye users signup kar chuke hain lekin abhi tak approve nahi hue. Approve karne ke baad woh login kar sakte hain.
-      </p>
-      <div class="table-wrap">
-        <table id="pendingTable">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Signup Date</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </section>
-    <section id="view-overview" class="view active">
-      <h2>Dashboard Overview</h2>
-      <div class="cards">
-        <div class="card">
-          <div class="k">Total Sales</div>
-          <div class="v" id="statSales">PKR 0</div>
-        </div>
-        <div class="card">
-          <div class="k">Invoices Today</div>
-          <div class="v" id="statToday">0</div>
-        </div>
-        <div class="card">
-          <div class="k">Total Invoices</div>
-          <div class="v" id="statTotal">0</div>
-        </div>
-        <div class="card">
-          <div class="k">Active Workers</div>
-          <div class="v" id="statWorkers">0</div>
-        </div>
-        <div class="card" id="pendingCard" style="display:none">
-          <div class="k">⏳ Pending Approvals</div>
-          <div class="v" id="statPending" style="color:#f59e0b">0</div>
-        </div>
-      </div>
-      <h3
-        style="margin-bottom:14px;font-size:16px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;">
-        Recent Invoices</h3>
-      <div class="table-wrap">
-        <table id="recentTable">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Customer</th>
-              <th>Total</th>
-              <th>By</th>
-              <th>Date</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </section>
+<main class="container">
 
-    <section id="view-invoices" class="view">
-      <h2>All Invoices</h2>
-      <div class="toolbar">
-        <input type="search" id="invSearch" placeholder="🔍 Search by customer or invoice #" />
-        <button class="btn primary" id="newInvoiceBtn">+ New Invoice</button>
+  <!-- OVERVIEW -->
+  <section id="view-overview" class="view active">
+    <h2>Dashboard Overview</h2>
+    
+    <div class="cards">
+      <div class="card"><div class="k">Total Sales</div><div class="v" id="statSales">PKR 0</div></div>
+      <div class="card"><div class="k">Invoices Today</div><div class="v" id="statToday">0</div></div>
+      <div class="card"><div class="k">Total Invoices</div><div class="v" id="statTotal">0</div></div>
+      <div class="card"><div class="k">Active Workers</div><div class="v" id="statWorkers">0</div></div>
+      <div class="card" style="border-left:3px solid #f59e0b">
+        <div class="k">🔧 Technician Jobs</div>
+        <div class="v" id="statTechJobs" style="color:#f59e0b">0</div>
       </div>
-      <div class="table-wrap">
-        <table id="invoicesTable">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Customer</th>
-              <th>Total</th>
-              <th>By</th>
-              <th>Date</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
+      <div class="card" style="border-left:3px solid #10b981">
+        <div class="k">🔧 Tech Revenue</div>
+        <div class="v" id="statTechRevenue" style="color:#10b981">PKR 0</div>
       </div>
-    </section>
-
-    <section id="view-products" class="view">
-      <h2>Products</h2>
-      <form id="productForm" class="inline-form">
-        <input type="text" id="pName" placeholder="Product name" required />
-        <input type="number" id="pPrice" placeholder="Price" step="0.01" required />
-        <input type="number" id="pTax" placeholder="Tax %" step="0.01" value="0" />
-        <input type="number" id="pStock" placeholder="Stock" value="0" />
-        <button type="submit" class="btn primary">+ Add</button>
-      </form>
-      <div class="table-wrap">
-        <table id="productsTable">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Price</th>
-              <th>Tax %</th>
-              <th>Stock</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
+      <div class="card" id="pendingCard" style="display:none">
+        <div class="k">⏳ Pending Approvals</div>
+        <div class="v" id="statPending" style="color:#f59e0b">0</div>
       </div>
-    </section>
+    </div>
+    
+    <h3 style="margin:24px 0 14px;font-size:16px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;">
+      Recent Customer Invoices
+    </h3>
+    <div class="table-wrap">
+      <table id="recentTable">
+        <thead><tr><th>#</th><th>Customer</th><th>Total</th><th>By</th><th>Date</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    
+    <h3 style="margin:24px 0 14px;font-size:16px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;">
+      🔧 Recent Technician Invoices
+    </h3>
+    <div class="table-wrap">
+      <table id="recentTechTable">
+        <thead>
+          <tr><th>#</th><th>Technician</th><th>Customer</th><th>Total</th><th>Status</th><th>Date</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
 
-    <section id="view-workers" class="view">
-      <h2>Users & Permissions</h2>
-      <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px">
-        Yahan se aap kisi bhi user ka <strong>role change</strong> kar sakte ho (Worker / Technician / Admin),
-        permissions on/off kar sakte ho, aur approve/reject kar sakte ho.
-      </p>
-      <div class="table-wrap">
-        <table id="workersTable">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Role</th>
-              <th>View Sales</th>
-              <th>Create Invoice</th>
-              <th>Manage Products</th>
-              <th>Active</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </section>
+  <!-- CUSTOMER INVOICES -->
+  <section id="view-invoices" class="view">
+    <h2>All Customer Invoices</h2>
+    
+    <div class="toolbar" style="flex-wrap:wrap;gap:10px">
+      <input type="search" id="invSearch" placeholder="🔍 Search by customer or invoice #" />
+      <input type="date" id="invFromDate" style="max-width:160px" title="From date" />
+      <input type="date" id="invToDate" style="max-width:160px" title="To date" />
+      <button class="btn primary" id="newInvoiceBtn">+ New Invoice</button>
+    </div>
+    
+    <div class="toolbar" style="margin-top:-8px">
+      <button class="btn" id="downloadInvoicesBtn" 
+        style="background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none">
+        📥 Download CSV
+      </button>
+      <button class="btn danger" id="bulkDeleteInvoicesBtn" disabled>
+        🗑️ Delete Selected (<span id="selectedInvCount">0</span>)
+      </button>
+      <span class="muted" style="font-size:13px;margin-left:auto">
+        <span id="invTotalCount"></span>
+      </span>
+    </div>
+    
+    <div class="table-wrap">
+      <table id="invoicesTable">
+        <thead>
+          <tr>
+            <th style="width:40px;text-align:center">
+              <input type="checkbox" id="invSelectAll" style="width:auto" />
+            </th>
+            <th>#</th>
+            <th>Customer</th>
+            <th>Total</th>
+            <th>By</th>
+            <th>Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
 
-    <section id="view-settings" class="view">
-      <h2>Shop Settings</h2>
-      <form id="settingsForm" class="form-2col">
+  <!-- TECHNICIAN INVOICES -->
+  <section id="view-tech-invoices" class="view">
+    <h2>🔧 Technician Invoices</h2>
+    
+    <div class="toolbar" style="flex-wrap:wrap;gap:10px">
+      <input type="search" id="techInvSearch" placeholder="🔍 Search technician or customer" />
+      <input type="date" id="techInvFromDate" style="max-width:160px" title="From date" />
+      <input type="date" id="techInvToDate" style="max-width:160px" title="To date" />
+      <select id="techInvStatusFilter" style="max-width:160px">
+        <option value="">All Status</option>
+        <option value="Paid">✅ Paid</option>
+        <option value="Partial">🔶 Partial</option>
+        <option value="Pending">⏳ Pending</option>
+      </select>
+    </div>
+    
+    <div class="toolbar" style="margin-top:-8px">
+      <button class="btn" id="downloadTechInvBtn" 
+        style="background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none">
+        📥 Download CSV
+      </button>
+      <button class="btn danger" id="bulkDeleteTechInvBtn" disabled>
+        🗑️ Delete Selected (<span id="selectedTechInvCount">0</span>)
+      </button>
+      <span class="muted" style="font-size:13px;margin-left:auto">
+        <span id="techInvTotalCount"></span>
+      </span>
+    </div>
+    
+    <div class="table-wrap">
+      <table id="techInvoicesTable">
+        <thead>
+          <tr>
+            <th style="width:40px;text-align:center">
+              <input type="checkbox" id="techInvSelectAll" style="width:auto" />
+            </th>
+            <th>#</th>
+            <th>Technician</th>
+            <th>Customer</th>
+            <th>Service</th>
+            <th>Total</th>
+            <th>Status</th>
+            <th>Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
 
-        <!-- LOGO UPLOAD -->
-        <div class="full logo-upload-section">
-          <label class="logo-label">Shop Logo</label>
-          <div class="logo-upload-box">
-            <div class="logo-preview" id="logoPreview">
-              <span class="logo-placeholder">📷</span>
-            </div>
-            <div class="logo-actions">
-              <input type="file" id="logoInput" accept="image/png,image/jpeg,image/webp" hidden />
-              <button type="button" class="btn primary" id="logoUploadBtn">📤 Upload Logo</button>
-              <button type="button" class="btn danger" id="logoRemoveBtn" style="display:none">🗑 Remove</button>
-              <p class="muted" style="margin-top:8px;font-size:12px;">
-                PNG, JPG ya WEBP • Max 2 MB • Recommended: 300x300 px
-              </p>
-            </div>
+  <!-- WORKERS -->
+  <section id="view-workers" class="view">
+    <h2>Users & Permissions</h2>
+    <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px">
+      Yahan se aap kisi bhi user ka <strong>role change</strong> kar sakte ho (Worker / Technician / Admin), permissions on/off kar sakte ho, aur approve/reject kar sakte ho.
+    </p>
+    <div class="table-wrap">
+      <table id="workersTable">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>View Sales</th>
+            <th>Create Invoice</th>
+            <th>Active</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+<!-- CREATE USER SECTION -->
+<section id="view-create-user" class="view">
+  <h2>➕ Create New User Account</h2>
+  <p style="color:var(--text-muted);font-size:13px;margin-bottom:20px">
+    Yahan se aap seedha worker ya technician ka account bana sakte hain. Unko login credentials de dein.
+  </p>
+
+  <div style="max-width:500px; background:rgba(255,255,255,0.03); padding:24px; border-radius:12px; border:1px solid var(--border);">
+    <form id="createUserForm">
+      <label style="display:block; font-size:13px; color:var(--text-muted); margin-bottom:6px;">Full Name *</label>
+      <input type="text" id="cuName" required placeholder="e.g., Ali Khan" style="width:100%; margin-bottom:16px;" />
+
+      <label style="display:block; font-size:13px; color:var(--text-muted); margin-bottom:6px;">Email Address *</label>
+      <input type="email" id="cuEmail" required placeholder="ali@example.com" style="width:100%; margin-bottom:16px;" />
+
+      <label style="display:block; font-size:13px; color:var(--text-muted); margin-bottom:6px;">Password *</label>
+      <input type="password" id="cuPassword" required minlength="6" placeholder="Min 6 characters" style="width:100%; margin-bottom:16px;" />
+
+      <label style="display:block; font-size:13px; color:var(--text-muted); margin-bottom:6px;">Role *</label>
+      <select id="cuRole" required style="width:100%; margin-bottom:24px; padding:10px; border-radius:8px; background:rgba(255,255,255,0.05); border:1px solid var(--border); color:white;">
+        <option value="worker">👤 Worker</option>
+        <option value="technician">🔧 Technician</option>
+        <option value="admin">👑 Admin</option>
+      </select>
+
+      <button type="submit" class="btn primary" id="cuSubmitBtn" style="width:100%;">Create Account</button>
+    </form>
+    <div id="cuMsg" style="margin-top:16px;"></div>
+  </div>
+</section>
+
+  <!-- SETTINGS -->
+  <section id="view-settings" class="view">
+    <h2>Shop Settings</h2>
+    <form id="settingsForm" class="form-2col">
+      
+      <!-- LOGO UPLOAD -->
+      <div class="full logo-upload-section">
+        <label class="logo-label">Shop Logo</label>
+        <div class="logo-upload-box">
+          <div class="logo-preview" id="logoPreview">
+            <span class="logo-placeholder">📷</span>
+          </div>
+          <div class="logo-actions">
+            <input type="file" id="logoInput" accept="image/png,image/jpeg,image/webp" hidden />
+            <button type="button" class="btn primary" id="logoUploadBtn">📤 Upload Logo</button>
+            <button type="button" class="btn danger" id="logoRemoveBtn" style="display:none">🗑 Remove</button>
+            <p class="muted" style="margin-top:8px;font-size:12px;">
+              PNG, JPG ya WEBP • Max 2 MB • Recommended: 300x300 px
+            </p>
           </div>
         </div>
+      </div>
 
-        <label>Shop Name <input type="text" id="shopName" placeholder="My Shop" /></label>
-        <label>Phone <input type="text" id="shopPhone" placeholder="+92 300 1234567" /></label>
-        <label>Email <input type="email" id="shopEmail" placeholder="shop@example.com" /></label>
-        <label>GSTIN <input type="text" id="shopGstin" placeholder="1234567890" /></label>
-        <label class="full">Address <textarea id="shopAddress" rows="2" placeholder="Shop address"></textarea></label>
-        <button type="submit" class="btn primary">💾 Save Settings</button>
-      </form>
-    </section>
+      <label>Shop Name <input type="text" id="shopName" placeholder="H.S Computers & CCTV" /></label>
+      <label>Phone <input type="text" id="shopPhone" placeholder="+92 315 8901026" /></label>
+      <label>Email <input type="email" id="shopEmail" placeholder="shop@example.com" /></label>
+      <label>GSTIN <input type="text" id="shopGstin" placeholder="Optional" /></label>
+      <label class="full">Address <textarea id="shopAddress" rows="2" placeholder="Shop address"></textarea></label>
 
-  </main>
+      <!-- WhatsApp Notifications -->
+      <div class="full" style="background:rgba(16,185,129,0.08);border-left:4px solid #10b981;padding:16px;border-radius:10px">
+        <h3 style="color:#10b981;font-size:14px;margin-bottom:14px;text-transform:uppercase;letter-spacing:1px">
+          📱 WhatsApp Notifications (Optional)
+        </h3>
+        <label>WhatsApp Number (with country code, no +)
+          <input type="text" id="whatsappNumber" placeholder="923158901026" />
+        </label>
+        <label>CallMeBot API Key
+          <input type="text" id="whatsappApikey" placeholder="123456" />
+        </label>
+        <p style="font-size:12px;color:var(--text-muted);margin-top:8px;line-height:1.6">
+          <strong>Setup:</strong><br>
+          1. WhatsApp me <strong>+34 644 59 86 87</strong> save karo<br>
+          2. Message: <code style="background:rgba(255,255,255,0.1);padding:2px 6px;border-radius:4px">I allow callmebot to send me messages</code><br>
+          3. Reply me API key milegi — yahan paste karo
+        </p>
+      </div>
 
-  <script type="module" src="js/admin.js"></script>
+      <button type="submit" class="btn primary">💾 Save Settings</button>
+    </form>
+  </section>
+
+</main>
+
+<script type="module" src="js/admin.js"></script>
 </body>
-
 </html>

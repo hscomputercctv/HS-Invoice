@@ -2,65 +2,244 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="theme-color" content="#6366f1" />
-<title>InvoicePro — Login</title>
+<title>Login — H.S Computers & CCTV</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css" />
-<link rel="stylesheet" href="css/login.css" />
+<style>
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f8fafc; /* Fallback */
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+  }
+
+  /* ─── LEFT SIDE IMAGE ─── */
+  .login-left {
+    flex: 1;
+    /* 👇 YAHAN APNI IMAGE KA LINK DAALEIN 👇 */
+    background-image: url('https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?q=80&w=2070&auto=format&fit=crop'); 
+    background-size: cover;
+    background-position: center;
+    position: relative;
+  }
+
+  /* Image ke upar dark overlay taaki text clear dikhe (optional) */
+  .login-left::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.7), rgba(99, 102, 241, 0.4));
+  }
+
+  .login-left-content {
+    position: relative;
+    z-index: 2;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 60px;
+    color: #fff;
+  }
+
+  .login-left-content h1 {
+    font-size: 42px;
+    font-weight: 900;
+    margin-bottom: 16px;
+    letter-spacing: -1px;
+  }
+
+  .login-left-content p {
+    font-size: 18px;
+    line-height: 1.6;
+    opacity: 0.9;
+    max-width: 400px;
+  }
+
+  /* ─── RIGHT SIDE FORM ─── */
+  .login-right {
+    width: 500px;
+    background: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    box-shadow: -10px 0 30px rgba(0, 0, 0, 0.05);
+    position: relative;
+    z-index: 10;
+  }
+
+  .login-box {
+    width: 100%;
+    max-width: 360px;
+  }
+
+  .brand-logo {
+    font-size: 28px;
+    font-weight: 900;
+    color: #1e293b;
+    margin-bottom: 8px;
+    text-align: center;
+    letter-spacing: -1px;
+  }
+
+  .brand-logo span {
+    color: #6366f1;
+  }
+
+  .login-subtitle {
+    text-align: center;
+    color: #64748b;
+    font-size: 14px;
+    margin-bottom: 30px;
+  }
+
+  .form-group {
+    margin-bottom: 20px;
+  }
+
+  .form-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: 8px;
+  }
+
+   .form-group input {
+    width: 100%;
+    padding: 14px 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 15px;
+    transition: all 0.2s;
+    background: #f8fafc;
+    color: #1e293b !important; /* 👈 Text ka color dark kar diya */
+    font-weight: 600;
+  }
+
+  .form-group input::placeholder {
+    color: #94a3b8 !important; /* 👈 Placeholder ka color grey kar diya */
+    font-weight: 400;
+  }
+
+  .form-group input:focus {
+    outline: none;
+    border-color: #6366f1;
+    background: #ffffff;
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+  }
+
+  .login-btn {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, #6366f1, #4f46e5);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 10px;
+  }
+
+  .login-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
+  }
+
+  .login-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .msg {
+    margin-top: 16px;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    display: none;
+    text-align: center;
+  }
+
+  .msg.error { background: #fef2f2; color: #dc2626; display: block; border: 1px solid #fecaca; }
+  .msg.success { background: #ecfdf5; color: #059669; display: block; border: 1px solid #a7f3d0; }
+
+  /* ─── MOBILE RESPONSIVE ─── */
+  @media (max-width: 900px) {
+    body {
+      flex-direction: column;
+      overflow-y: auto;
+    }
+    .login-left {
+      min-height: 250px;
+      flex: none;
+    }
+    .login-left-content {
+      padding: 30px;
+      text-align: center;
+      align-items: center;
+    }
+    .login-left-content h1 { font-size: 28px; }
+    .login-left-content p { font-size: 14px; }
+    
+    .login-right {
+      width: 100%;
+      padding: 30px 20px;
+      box-shadow: none;
+    }
+  }
+</style>
 </head>
 <body>
-  <div class="orb orb-1"></div>
-  <div class="orb orb-2"></div>
 
-  <div class="login-wrap">
-    <div class="login-card">
-      <h1 class="brand">🧾 InvoicePro</h1>
-      <p class="muted">Sign in to manage your shop</p>
+  <!-- LEFT SIDE: CUSTOM IMAGE -->
+  <div class="login-left">
+    <div class="login-left-content">
+      <h1>H.S Computers & CCTV</h1>
+      <p>Complete Invoice, Technician & Credit Management System. Manage your business from anywhere, anytime.</p>
+    </div>
+  </div>
 
-      <div class="tabs">
-        <button class="tab active" data-tab="login">Login</button>
-        <button class="tab" data-tab="signup">Sign Up</button>
-      </div>
+  <!-- RIGHT SIDE: LOGIN FORM -->
+  <div class="login-right">
+    <div class="login-box">
+      <h1 class="brand-logo">🧾 Invoice<span>Pro</span></h1>
+      <p class="login-subtitle">Sign in to your account</p>
 
-      <!-- LOGIN -->
-      <form id="loginForm" class="form">
-        <label>Email</label>
-        <input type="email" id="loginEmail" required autocomplete="email" placeholder="you@example.com" />
+      <form id="loginForm">
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" id="loginEmail" required placeholder="you@example.com" autocomplete="email" />
+        </div>
 
-        <label>Password</label>
-        <input type="password" id="loginPassword" required autocomplete="current-password" placeholder="••••••••" />
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="loginPassword" required placeholder="••••••••" autocomplete="current-password" />
+        </div>
 
-        <button type="submit" class="btn primary">Sign In →</button>
+        <button type="submit" class="login-btn" id="loginBtn">Sign In →</button>
       </form>
 
-      <!-- SIGNUP -->
-      <form id="signupForm" class="form hidden">
-  <label>Full Name</label>
-  <input type="text" id="signupName" required placeholder="John Doe" />
-
-  <label>Email</label>
-  <input type="email" id="signupEmail" required autocomplete="email" placeholder="you@example.com" />
-
-  <label>Password</label>
-  <input type="password" id="signupPassword" required minlength="6" placeholder="Min 6 characters" />
-
-  <label>Role</label>
-  <select id="signupRole" required>
-    <option value="worker">👤 Shop Worker</option>
-    <option value="technician">🔧 Technician</option>
-  </select>
-
-  <p class="muted" style="margin-top:14px;font-size:12px;text-align:center;padding:10px;background:rgba(99,102,241,0.1);border-radius:8px;border-left:3px solid var(--primary)">
-    ℹ️ Account banane ke baad <strong>Admin approval</strong> ka wait karein. Approve hone ke baad hi aap login kar sakte hain.
-  </p>
-
-  <button type="submit" class="btn primary">Create Account ✨</button>
-</form>
-
       <div id="authMsg" class="msg"></div>
+      
+      <p style="text-align:center; margin-top:24px; font-size:12px; color:#94a3b8;">
+        Don't have an account? <br>
+        Contact Admin to create one.
+      </p>
     </div>
   </div>
 

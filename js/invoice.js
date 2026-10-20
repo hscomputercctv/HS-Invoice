@@ -86,11 +86,8 @@ let existingId = null;
     setTimeout(() => window.print(), 100);  // 👈 animation ke liye chhota delay
   });
 
-  // Customer fields → print fields live sync
-  ['custName', 'custPhone', 'custAddr', 'custGstin'].forEach((id) => {
-    const el = $(id);
-    if (el) el.addEventListener('input', syncPrintFields);
-  });
+// Customer field → print field live sync
+$('custName')?.addEventListener('input', syncPrintFields);
 
   syncPrintFields();
 })();
@@ -105,15 +102,6 @@ function syncPrintFields() {
   };
 
   setText('custNameP', $('custName')?.value);
-  setText('custPhoneP', $('custPhone')?.value);
-  setText('custAddrP', $('custAddr')?.value);
-  setText('custGstinP', $('custGstin')?.value);
-
-  // Empty field ko hide karo (print me clean dikhe)
-  ['custPhoneP', 'custAddrP', 'custGstinP'].forEach((id) => {
-    const el = $(id);
-    if (el) el.style.display = el.textContent.trim() ? 'block' : 'none';
-  });
 }
 
 // ============================================
@@ -211,20 +199,15 @@ async function saveInvoice() {
   const disc = parseFloat($('discount').value) || 0;
   const grand = Math.max(0, subtotal + taxTotal - disc);
 
-  const payload = {
-    customer_name: custName,
-    customer_phone: $('custPhone').value,
-    customer_address: $('custAddr').value,
-    customer_gstin: $('custGstin').value,
-    subtotal,
-    tax_total: taxTotal,
-    discount: disc,
-    grand_total: grand,
-    payment_mode: $('paymentMode').value,
-    notes: $('notes').value,
-    created_by: me.id,
-    created_by_name: me.full_name
-  };
+const payload = {
+  invoice_number: $('invNo').textContent,
+  customer_name: custName,
+  subtotal, tax_total: taxTotal, discount: disc, grand_total: grand,
+  payment_mode: $('paymentMode').value,
+  notes: $('notes').value,
+  created_by: me.id,
+  created_by_name: me.full_name
+};
 
   let invoiceId;
 
@@ -324,9 +307,6 @@ async function loadExisting(id) {
   $('invDate').textContent = formatDate(inv.created_at);
   $('invBy').textContent = inv.created_by_name;
   $('custName').value = inv.customer_name || '';
-  $('custPhone').value = inv.customer_phone || '';
-  $('custAddr').value = inv.customer_address || '';
-  $('custGstin').value = inv.customer_gstin || '';
   $('discount').value = inv.discount || 0;
   $('paymentMode').value = inv.payment_mode || 'Cash';
   $('notes').value = inv.notes || '';

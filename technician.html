@@ -2,9 +2,11 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+<meta name="theme-color" content="#f59e0b" />
 <title>Technician Dashboard — H.S Computers & CCTV</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css" />
 <link rel="stylesheet" href="css/dashboard.css" />
@@ -28,22 +30,12 @@
   <section id="view-overview" class="view active">
     <h2>Welcome, <span id="userName" style="font-weight:800">Technician</span> 👋</h2>
     <div class="cards">
-      <div class="card">
-        <div class="k">Today's Jobs</div>
-        <div class="v" id="tToday">0</div>
-      </div>
-      <div class="card">
-        <div class="k">Total Jobs</div>
-        <div class="v" id="tTotal">0</div>
-      </div>
-      <div class="card">
-        <div class="k">My Total Charges</div>
-        <div class="v" id="tTotalAmount">PKR 0</div>
-      </div>
-      <div class="card">
-        <div class="k">Pending Payments</div>
-        <div class="v" id="tPending" style="color:#f59e0b">PKR 0</div>
-      </div>
+      <div class="card"><div class="k">Today's Jobs</div><div class="v" id="tToday">0</div></div>
+      <div class="card"><div class="k">Total Jobs</div><div class="v" id="tTotal">0</div></div>
+      <div class="card"><div class="k">Total Charges</div><div class="v" id="tTotalAmount">PKR 0</div></div>
+      <div class="card"><div class="k">💰 Paid</div><div class="v" id="tPaid" style="color:#10b981">PKR 0</div></div>
+      <div class="card"><div class="k">⏳ Pending</div><div class="v" id="tPending" style="color:#f59e0b">PKR 0</div></div>
+      <div class="card"><div class="k">📅 This Month</div><div class="v" id="tMonth">PKR 0</div></div>
     </div>
 
     <div class="toolbar">
@@ -56,6 +48,17 @@
     <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px">
       Sirf aapki invoices yahan dikhti hain. Admin ko saari dikhti hain.
     </p>
+    
+    <div class="toolbar" style="flex-wrap:wrap;gap:10px">
+      <input type="search" id="techInvSearch" placeholder="🔍 Search customer, invoice #..." />
+      <select id="techInvFilter" style="max-width:180px">
+        <option value="">All Status</option>
+        <option value="Paid">✅ Paid</option>
+        <option value="Partial">🔶 Partial</option>
+        <option value="Pending">⏳ Pending</option>
+      </select>
+    </div>
+    
     <div class="table-wrap">
       <table id="techInvoicesTable">
         <thead>

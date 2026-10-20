@@ -3,6 +3,7 @@ import { formatMoney, formatDate, requireAuth, escapeHtml } from './utils.js';
 
 const $ = (id) => document.getElementById(id);
 let me = null;
+let allInvoices = [];
 
 // ============================================
 // INIT
@@ -19,7 +20,6 @@ let me = null;
     window.location.href = 'index.html';
   });
 
-  // Tabs
   document.querySelectorAll('.tab-btn').forEach((b) => {
     b.addEventListener('click', () => {
       document.querySelectorAll('.tab-btn').forEach((x) => x.classList.remove('active'));
@@ -29,22 +29,24 @@ let me = null;
     });
   });
 
-  // New Invoice button
   $('newTechInvoiceBtn').addEventListener('click', () => {
     window.location.href = 'technician-invoice.html';
   });
+
+  $('techInvSearch')?.addEventListener('input', renderInvoicesTable);
+  $('techInvFilter')?.addEventListener('change', renderInvoicesTable);
 
   await loadMyInvoices();
 })();
 
 // ============================================
-// LOAD MY INVOICES (sirf apni)
+// LOAD MY INVOICES
 // ============================================
 async function loadMyInvoices() {
   const { data, error } = await supabase
     .from('technician_invoices')
     .select('*')
-    .eq('technician_id', me.id)         // 👈 SIRF APNI
+    .eq('technician_id', me.id)
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -52,38 +54,69 @@ async function loadMyInvoices() {
     return;
   }
 
-  const all = data || [];
+  allInvoices = data || [];
 
   // Stats
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const todayCount = all.filter((i) => new Date(i.created_at) >= today).length;
-  const totalAmount = all.reduce((s, i) => s + Number(i.grand_total || 0), 0);
-  const pendingAmount = all
-    .filter((i) => i.payment_status === 'Pending' || i.payment_status === 'Partial')
+  const monthStart = new Date();
+  monthStart.setDate(1);
+  monthStart.setHours(0, 0, 0, 0);
+
+  const todayCount = allInvoices.filter((i) => new Date(i.created_at) >= today).length;
+  const totalAmount = allInvoices.reduce((s, i) => s + Number(i.grand_total || 0), 0);
+  const paidAmount = allInvoices
+    .filter((i) => i.payment_status === 'Paid')
+    .reduce((s, i) => s + Number(i.grand_total || 0), 0);
+  const pendingAmount = allInvoices
+    .filter((i) => i.payment_status !== 'Paid')
     .reduce((s, i) => s + (Number(i.grand_total || 0) - Number(i.amount_received || 0)), 0);
+  const monthAmount = allInvoices
+    .filter((i) => new Date(i.created_at) >= monthStart)
+    .reduce((s, i) => s + Number(i.grand_total || 0), 0);
 
   $('tToday').textContent = todayCount;
-  $('tTotal').textContent = all.length;
+  $('tTotal').textContent = allInvoices.length;
   $('tTotalAmount').textContent = formatMoney(totalAmount);
+  $('tPaid').textContent = formatMoney(paidAmount);
   $('tPending').textContent = formatMoney(pendingAmount);
+  $('tMonth').textContent = formatMoney(monthAmount);
 
-  // Table
+  renderInvoicesTable();
+}
+
+// ============================================
+// RENDER TABLE
+// ============================================
+function renderInvoicesTable() {
+  const search = $('techInvSearch')?.value.toLowerCase() || '';
+  const statusFilter = $('techInvFilter')?.value || '';
+
+  const filtered = allInvoices.filter((i) => {
+    if (search) {
+      const match =
+        (i.invoice_number || '').toLowerCase().includes(search) ||
+        (i.customer_name || '').toLowerCase().includes(search) ||
+        (i.service_type || '').toLowerCase().includes(search);
+      if (!match) return false;
+    }
+    if (statusFilter && i.payment_status !== statusFilter) return false;
+    return true;
+  });
+
   const tbody = $('techInvoicesTable').querySelector('tbody');
 
-  if (!all.length) {
+  if (!filtered.length) {
     tbody.innerHTML = `
-      <tr>
-        <td colspan="7" style="text-align:center;padding:20px;color:var(--text-muted)">
-          Koi invoice nahi. "+ New Technician Invoice" dabao.
-        </td>
-      </tr>`;
+      <tr><td colspan="7" style="text-align:center;padding:20px;color:var(--text-muted)">
+        Koi invoice nahi. "+ New Technician Invoice" dabao.
+      </td></tr>`;
     return;
   }
 
-  tbody.innerHTML = all.map((i) => {
-    const statusColor = 
+  tbody.innerHTML = filtered.map((i) => {
+    const statusColor =
       i.payment_status === 'Paid' ? '#10b981' :
       i.payment_status === 'Partial' ? '#f59e0b' : '#ef4444';
 
@@ -94,9 +127,12 @@ async function loadMyInvoices() {
         <td>${escapeHtml(i.service_type || '-')}</td>
         <td>${formatMoney(i.grand_total)}</td>
         <td>
-          <span style="color:${statusColor};font-weight:600;font-size:12px">
-            ${i.payment_status || 'Pending'}
-          </span>
+          <select class="status-select" data-id="${i.id}" 
+            style="padding:4px 8px;border-radius:6px;font-size:12px;font-weight:600;color:${statusColor};background:rgba(255,255,255,0.05);border:1px solid var(--border)">
+            <option value="Pending" ${i.payment_status === 'Pending' ? 'selected' : ''}>⏳ Pending</option>
+            <option value="Partial" ${i.payment_status === 'Partial' ? 'selected' : ''}>🔶 Partial</option>
+            <option value="Paid" ${i.payment_status === 'Paid' ? 'selected' : ''}>✅ Paid</option>
+          </select>
         </td>
         <td>${formatDate(i.created_at)}</td>
         <td>
@@ -107,4 +143,30 @@ async function loadMyInvoices() {
         </td>
       </tr>`;
   }).join('');
+
+  tbody.querySelectorAll('.status-select').forEach((sel) => {
+    sel.addEventListener('change', async (e) => {
+      const id = e.target.dataset.id;
+      const newStatus = e.target.value;
+
+      const updateData = { payment_status: newStatus };
+      if (newStatus === 'Paid') {
+        const inv = allInvoices.find((x) => x.id === id);
+        if (inv) updateData.amount_received = inv.grand_total;
+      }
+
+      const { error } = await supabase
+        .from('technician_invoices')
+        .update(updateData)
+        .eq('id', id);
+
+      if (error) {
+        alert('❌ ' + error.message);
+        return;
+      }
+
+      alert(`✅ Status "${newStatus}" set ho gaya!`);
+      await loadMyInvoices();
+    });
+  });
 }

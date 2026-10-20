@@ -143,7 +143,7 @@
 }
 .inv-table input:focus {
   box-shadow: none;
-  background: rgba(99,102,241,0.08);
+  background: rgba(11, 15, 255, 0.08);
   outline: 1px dashed #6366f1;
 }
 .inv-table .line-total {
@@ -468,4 +468,65 @@
 .inv-footer label,
 .thanks {
   color: #4b5563 !important;
+}
+
+/* ============================================
+   SELECT DROPDOWN — VISIBLE FIX
+   ============================================ */
+
+/* Invoice page ke andar select elements */
+.invoice-page select,
+.inv-footer select,
+.tech-section select,
+.inv-customer select {
+  background: #ffffff !important;
+  color: #1f2937 !important;
+  border: 1px solid #d1d5db !important;
+  padding: 10px 12px !important;
+  border-radius: 8px !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  width: 100%;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231f2937' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 14px;
+  padding-right: 32px !important;
+}
+
+/* Option text color fix */
+.invoice-page select option,
+.inv-footer select option,
+.tech-section select option {
+  background: #ffffff !important;
+  color: #1f2937 !important;
+  padding: 8px !important;
+}
+
+/* Focus state */
+.invoice-page select:focus,
+.inv-footer select:focus,
+.tech-section select:focus {
+  outline: none;
+  border-color: #6366f1 !important;
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.15) !important;
+}
+
+/* ─── Print me ─── */
+@media print {
+  .invoice-page select,
+  .inv-footer select,
+  .tech-section select {
+    background: transparent !important;
+    border: none !important;
+    color: #000 !important;
+    padding: 0 !important;
+    background-image: none !important;
+    appearance: none;
+    -webkit-appearance: none;
+    font-weight: 600;
+  }
 }

@@ -2,8 +2,22 @@ export const formatMoney = (n) =>
   'RS ' + (Number(n) || 0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 
 export const formatDate = (d) => {
-  const dt = d ? new Date(d) : new Date();
   const p = (x) => String(x).padStart(2, '0');
+
+  if (!d) {
+    const now = new Date();
+    return `${p(now.getDate())}/${p(now.getMonth() + 1)}/${now.getFullYear()}`;
+  }
+
+  // YYYY-MM-DD (date-only) — timezone-safe
+  if (typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d)) {
+    const [year, month, day] = d.split('-');
+    return `${day}/${month}/${year}`;
+  }
+
+  // Baaki (timestamps, Date objects)
+  const dt = new Date(d);
+  if (isNaN(dt.getTime())) return '';
   return `${p(dt.getDate())}/${p(dt.getMonth() + 1)}/${dt.getFullYear()}`;
 };
 
