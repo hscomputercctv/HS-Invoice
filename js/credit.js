@@ -20,7 +20,6 @@ let currentWhatsappCustomer = null;
     const ctx = await requireAuth(supabase, 'admin');
     if (!ctx) return;
     me = ctx.profile;
-    console.log('✅ Logged in:', me.email);
   } catch (err) {
     console.error('❌ Init error:', err);
     return;
@@ -47,7 +46,7 @@ let currentWhatsappCustomer = null;
   $('whatsappCancelBtn')?.addEventListener('click', closeWhatsappModal);
   $('whatsappForm')?.addEventListener('submit', sendWhatsAppWithPDF);
 
-  // Click outside
+  // Click outside to close modals
   ['creditModal', 'paymentModal', 'whatsappModal'].forEach((id) => {
     $(id)?.addEventListener('click', (e) => {
       if (e.target === $(id)) {
@@ -63,7 +62,7 @@ let currentWhatsappCustomer = null;
   $('creditStatusFilter')?.addEventListener('change', renderCreditList);
   $('creditSortFilter')?.addEventListener('change', renderCreditList);
 
-  // Bulk
+  // Bulk actions
   $('downloadCSVBtn')?.addEventListener('click', downloadCSV);
   $('bulkDeleteBtn')?.addEventListener('click', bulkDelete);
 
@@ -85,13 +84,11 @@ async function loadCreditEntries() {
     return alert('❌ Load failed: ' + error.message);
   }
 
-  // Payments fetch karo
   const { data: payments } = await supabase
     .from('credit_payments')
     .select('*')
     .order('payment_date', { ascending: false });
 
-  // Attach payments to entries
   allEntries = (entries || []).map((e) => {
     e.payments = (payments || []).filter((p) => p.credit_entry_id === e.id);
     return e;
@@ -199,7 +196,7 @@ function renderCreditList() {
 }
 
 // ============================================
-// CUSTOMER CARD
+// CUSTOMER CARD (Header se number removed)
 // ============================================
 function renderCustomerCard(cust) {
   const total = cust.total;
@@ -227,7 +224,6 @@ function renderCustomerCard(cust) {
             👤 ${escapeHtml(cust.name)}
             <span class="customer-entries-count">${cust.entries.length} entr${cust.entries.length !== 1 ? 'ies' : 'y'}</span>
           </div>
-          ${cust.phone ? `<div style="font-size:13px;color:var(--text-muted);margin-top:4px">📞 ${escapeHtml(cust.phone)}</div>` : ''}
         </div>
         <span class="status-badge ${status}">${statusIcon} ${status}</span>
       </div>
@@ -290,7 +286,6 @@ function renderEntryRow(e) {
   const isPartial = e.status === 'Partial';
   const statusIcon = isPaid ? '✅' : isPartial ? '🔶' : '⏳';
 
-  // Payment history
   let paymentHistory = '';
   if (e.payments && e.payments.length > 0) {
     paymentHistory = `
@@ -670,7 +665,7 @@ function closeWhatsappModal() {
 }
 
 // ============================================
-// GENERATE PDF
+// 🚀 GENERATE PDF (Header me number nahi aayega)
 // ============================================
 async function generatePdfBlob(customerKey) {
   const cust = getCustomerData(customerKey);
@@ -684,147 +679,210 @@ async function generatePdfBlob(customerKey) {
   const shopEmail = me.shop_email || '';
   const shopLogo = me.shop_logo_url || '';
 
-  const container = document.createElement('div');
-  container.style.cssText = 'position:fixed;left:-9999px;top:0;width:794px;background:#fff;padding:40px;font-family:Inter,Arial,sans-serif;color:#1f2937;';
-  
-  container.innerHTML = `
-    <div style="font-family:'Inter',Arial,sans-serif;color:#1f2937;background:#fff">
-
-      <!-- HEADER -->
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:20px;border-bottom:4px solid #6366f1;gap:20px">
-        <div style="display:flex;gap:16px;align-items:flex-start;flex:1">
-          ${shopLogo ? `<img src="${shopLogo}" alt="Logo" style="width:80px;height:80px;object-fit:contain;border-radius:12px;background:#fff;padding:6px;border:1px solid #e5e7eb;flex-shrink:0" crossorigin="anonymous" />` : ''}
-          <div>
-            <h1 style="font-size:26px;font-weight:800;color:#6366f1;margin:0 0 8px 0">${escapeHtml(shopName)}</h1>
-            ${shopAddress ? `<p style="margin:3px 0;font-size:13px;color:#4b5563">📍 ${escapeHtml(shopAddress)}</p>` : ''}
-            ${shopPhone ? `<p style="margin:3px 0;font-size:13px;color:#4b5563">📞 ${escapeHtml(shopPhone)}</p>` : ''}
-            ${shopEmail ? `<p style="margin:3px 0;font-size:13px;color:#4b5563">✉️ ${escapeHtml(shopEmail)}</p>` : ''}
-          </div>
-        </div>
-        <div style="text-align:right;min-width:200px">
-          <h2 style="font-size:24px;font-weight:900;color:#f59e0b;margin:0;letter-spacing:3px">CREDIT KHATA</h2>
-          <p style="margin:8px 0 0 0;font-size:12px;color:#6b7280"><strong>Generated:</strong> ${new Date().toLocaleString('en-GB')}</p>
-        </div>
-      </div>
-
-      <!-- CUSTOMER -->
-      <div style="background:#f3f4f6;padding:16px;border-left:5px solid #6366f1;margin:22px 0;border-radius:8px">
-        <div style="font-size:11px;font-weight:800;color:#6366f1;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px">Customer Details</div>
-        <p style="margin:5px 0;font-size:16px;font-weight:700;color:#1f2937">👤 ${escapeHtml(name)}</p>
-        ${phone ? `<p style="margin:5px 0;font-size:14px;color:#4b5563">📞 ${escapeHtml(phone)}</p>` : ''}
-      </div>
-
-      <!-- TABLE -->
-      <div style="font-size:12px;font-weight:800;color:#6366f1;text-transform:uppercase;letter-spacing:1.5px;margin:24px 0 12px 0">Credit Entries (${entries.length})</div>
-      
-      <table style="width:100%;border-collapse:collapse;margin-bottom:22px">
-        <thead>
-          <tr style="background:#6366f1;color:#fff">
-            <th style="padding:10px 6px;text-align:left;font-size:11px;font-weight:700;border:1px solid #4f46e5;width:35px">#</th>
-            <th style="padding:10px 6px;text-align:left;font-size:11px;font-weight:700;border:1px solid #4f46e5;width:85px">Date</th>
-            <th style="padding:10px 6px;text-align:left;font-size:11px;font-weight:700;border:1px solid #4f46e5">Description</th>
-            <th style="padding:10px 6px;text-align:left;font-size:11px;font-weight:700;border:1px solid #4f46e5;width:105px">Phone</th>
-            <th style="padding:10px 6px;text-align:right;font-size:11px;font-weight:700;border:1px solid #4f46e5;width:80px">Amount</th>
-            <th style="padding:10px 6px;text-align:right;font-size:11px;font-weight:700;border:1px solid #4f46e5;width:75px">Paid</th>
-            <th style="padding:10px 6px;text-align:right;font-size:11px;font-weight:700;border:1px solid #4f46e5;width:85px">Balance</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${entries.map((e, i) => {
-            const amt = Number(e.amount || 0);
-            const paid = Number(e.paid_amount || 0);
-            const bal = amt - paid;
-            const bg = i % 2 === 0 ? '#ffffff' : '#f9fafb';
-            return `
-              <tr style="background:${bg}">
-                <td style="padding:9px 6px;font-size:12px;border:1px solid #e5e7eb;text-align:center;font-weight:600;color:#6b7280">${i + 1}</td>
-                <td style="padding:9px 6px;font-size:12px;border:1px solid #e5e7eb;color:#4b5563">${formatDate(e.entry_date)}</td>
-                <td style="padding:9px 6px;font-size:12px;border:1px solid #e5e7eb;color:#1f2937;font-weight:500">
-                  ${escapeHtml(e.description)}
-                  ${e.service_type ? `<div style="font-size:10px;color:#6b7280;margin-top:2px">🔧 ${escapeHtml(e.service_type)}</div>` : ''}
-                </td>
-                <td style="padding:9px 6px;font-size:12px;border:1px solid #e5e7eb;color:#25D366;font-weight:600;white-space:nowrap">
-                  ${e.customer_phone ? escapeHtml(e.customer_phone) : '<span style="color:#9ca3af;font-weight:400">—</span>'}
-                </td>
-                <td style="padding:9px 6px;font-size:12px;border:1px solid #e5e7eb;text-align:right;color:#6366f1;font-weight:600;white-space:nowrap">${amt > 0 ? amt.toFixed(2) : '—'}</td>
-                <td style="padding:9px 6px;font-size:12px;border:1px solid #e5e7eb;text-align:right;color:#10b981;font-weight:600;white-space:nowrap">${paid > 0 ? paid.toFixed(2) : '—'}</td>
-                <td style="padding:9px 6px;font-size:12px;border:1px solid #e5e7eb;text-align:right;color:#ef4444;font-weight:700;white-space:nowrap">${bal > 0 ? bal.toFixed(2) : '✓'}</td>
-              </tr>
-            `;
-          }).join('')}
-        </tbody>
-      </table>
-
-      <!-- TOTALS -->
-      <div style="display:flex;justify-content:flex-end;margin-bottom:30px">
-        <div style="min-width:340px;background:#f3f4f6;padding:18px;border-radius:10px;border:1px solid #e5e7eb">
-          <div style="display:flex;justify-content:space-between;padding:8px 0;font-size:14px;border-bottom:1px dashed #d1d5db">
-            <span style="color:#4b5563">Total Amount:</span>
-            <strong style="color:#6366f1">PKR ${total.toFixed(2)}</strong>
-          </div>
-          <div style="display:flex;justify-content:space-between;padding:8px 0;font-size:14px;border-bottom:1px dashed #d1d5db">
-            <span style="color:#4b5563">Total Paid:</span>
-            <strong style="color:#10b981">PKR ${totalPaid.toFixed(2)}</strong>
-          </div>
-          <div style="display:flex;justify-content:space-between;padding:12px 0 4px 0;font-size:18px;border-top:3px solid #6366f1;margin-top:8px">
-            <span style="font-weight:800">BALANCE:</span>
-            <strong style="color:#ef4444;font-size:22px">PKR ${totalBalance.toFixed(2)}</strong>
-          </div>
-        </div>
-      </div>
-
-      <!-- FOOTER -->
-      <div style="border-top:2px dashed #d1d5db;padding-top:18px;text-align:center;font-size:12px;color:#6b7280">
-        <p style="margin:6px 0;font-size:14px;color:#6366f1;font-weight:700">شكريه! Aapke business ke liye shukriya 🙏</p>
-        <p style="margin:4px 0"><strong>${escapeHtml(shopName)}</strong>${shopPhone ? ' — ' + escapeHtml(shopPhone) : ''}</p>
-        <p style="margin:4px 0;font-size:11px;color:#9ca3af">This is a computer-generated document.</p>
-      </div>
-    </div>
-  `;
-
-  document.body.appendChild(container);
-  await new Promise((r) => setTimeout(r, 400));
-
-  const canvas = await html2canvas(container, {
-    scale: 2,
-    useCORS: true,
-    allowTaint: true,
-    backgroundColor: '#ffffff',
-    logging: false,
-    width: 794,
-    windowWidth: 794
-  });
-
-  document.body.removeChild(container);
-
   const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-  const pdfWidth = pdf.internal.pageSize.getWidth();
-  const pdfHeight = pdf.internal.pageSize.getHeight();
-  const imgWidth = pdfWidth - 20;
-  const imgHeight = (canvas.height * imgWidth) / canvas.width;
-  const imgData = canvas.toDataURL('image/jpeg', 0.95);
+  const doc = new jsPDF('p', 'mm', 'a4');
 
-  let heightLeft = imgHeight;
-  let position = 10;
-  pdf.addImage(imgData, 'JPEG', 10, position, imgWidth, imgHeight);
-  heightLeft -= (pdfHeight - 20);
-
-  while (heightLeft > 0) {
-    position = heightLeft - imgHeight + 10;
-    pdf.addPage();
-    pdf.addImage(imgData, 'JPEG', 10, position, imgWidth, imgHeight);
-    heightLeft -= (pdfHeight - 20);
+  // 1. HEADER
+  if (shopLogo) {
+    try {
+      doc.addImage(shopLogo, 'PNG', 14, 15, 20, 20);
+    } catch (e) {
+      console.warn('Logo load error in PDF:', e);
+    }
   }
 
+  doc.setFontSize(22);
+  doc.setTextColor(99, 102, 241);
+  doc.setFont('helvetica', 'bold');
+  doc.text(shopName, shopLogo ? 38 : 14, 22);
+
+  doc.setFontSize(10);
+  doc.setTextColor(75, 85, 99);
+  doc.setFont('helvetica', 'normal');
+  
+  let headerY = 28;
+  if (shopAddress) { doc.text(shopAddress, shopLogo ? 38 : 14, headerY); headerY += 5; }
+  if (shopPhone) { doc.text(`Phone: ${shopPhone}`, shopLogo ? 38 : 14, headerY); headerY += 5; }
+  if (shopEmail) { doc.text(`Email: ${shopEmail}`, shopLogo ? 38 : 14, headerY); headerY += 5; }
+
+  doc.setFontSize(18);
+  doc.setTextColor(245, 158, 11);
+  doc.setFont('helvetica', 'bold');
+  doc.text('CREDIT KHATA', 196, 22, { align: 'right' });
+
+  doc.setFontSize(10);
+  doc.setTextColor(107, 114, 128);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`Generated: ${new Date().toLocaleString('en-GB')}`, 196, 28, { align: 'right' });
+
+  doc.setDrawColor(229, 231, 235);
+  doc.setLineWidth(0.5);
+  doc.line(14, Math.max(headerY, 38), 196, Math.max(headerY, 38));
+
+  // 2. CUSTOMER DETAILS (👈 Yahan se number remove kar diya gaya hai)
+  let currentY = Math.max(headerY, 38) + 12;
+  
+  doc.setFillColor(243, 244, 246);
+  doc.rect(14, currentY, 182, 18, 'F');
+  doc.setFillColor(99, 102, 241);
+  doc.rect(14, currentY, 3, 18, 'F');
+
+  doc.setFontSize(10);
+  doc.setTextColor(99, 102, 241);
+  doc.setFont('helvetica', 'bold');
+  doc.text('CUSTOMER DETAILS', 20, currentY + 6);
+
+  doc.setFontSize(12);
+  doc.setTextColor(31, 41, 55);
+  doc.text(`Name: ${name}`, 20, currentY + 13);
+  
+  // 👇 Phone number ka code hata diya gaya hai yahan se
+  // if (phone) {
+  //   doc.setFontSize(10);
+  //   doc.setTextColor(75, 85, 99);
+  //   doc.text(`Phone: ${phone}`, 120, currentY + 13);
+  // }
+
+  currentY += 30;
+
+  // 3. ENTRIES TABLE
+  doc.setFontSize(11);
+  doc.setTextColor(99, 102, 241);
+  doc.setFont('helvetica', 'bold');
+  doc.text(`CREDIT ENTRIES (${entries.length})`, 14, currentY);
+  
+  currentY += 4;
+
+  const tableColumn = ["#", "Date", "Description", "Phone", "Amount", "Paid", "Balance"];
+  const tableRows = [];
+
+  entries.forEach((e, index) => {
+    const amt = Number(e.amount || 0);
+    const paid = Number(e.paid_amount || 0);
+    const bal = amt - paid;
+    
+    tableRows.push([
+      index + 1,
+      formatDate(e.entry_date),
+      e.description + (e.service_type ? `\n(${e.service_type})` : ''),
+      e.customer_phone || '-',
+      amt > 0 ? amt.toFixed(2) : '-',
+      paid > 0 ? paid.toFixed(2) : '-',
+      bal > 0 ? bal.toFixed(2) : '✓'
+    ]);
+  });
+
+  doc.autoTable({
+    startY: currentY,
+    head: [tableColumn],
+    body: tableRows,
+    theme: 'grid',
+    styles: { 
+      fontSize: 9,
+      cellPadding: 3,
+      valign: 'middle'
+    },
+    headStyles: { 
+      fillColor: [99, 102, 241], 
+      textColor: 255,
+      fontStyle: 'bold'
+    },
+    alternateRowStyles: { 
+      fillColor: [249, 250, 251] 
+    },
+    columnStyles: {
+      0: { cellWidth: 10, halign: 'center' },
+      1: { cellWidth: 22 },
+      2: { cellWidth: 'auto' },
+      3: { cellWidth: 28 },
+      4: { cellWidth: 24, halign: 'right' },
+      5: { cellWidth: 20, halign: 'right' },
+      6: { cellWidth: 24, halign: 'right', fontStyle: 'bold' }
+    },
+    didParseCell: function(data) {
+      if (data.section === 'body' && data.column.index === 6) {
+        data.cell.styles.textColor = [239, 68, 68];
+      }
+      if (data.section === 'body' && data.column.index === 5) {
+        data.cell.styles.textColor = [16, 185, 129];
+      }
+      if (data.section === 'body' && data.column.index === 3) {
+        data.cell.styles.textColor = [37, 211, 102];
+      }
+    }
+  });
+
+  let finalY = doc.lastAutoTable.finalY + 15;
+
+  if (finalY > 250) {
+    doc.addPage();
+    finalY = 20;
+  }
+
+  // 4. TOTALS BLOCK
+  const boxWidth = 90;
+  const boxX = 196 - boxWidth;
+  const boxHeight = 35;
+
+  doc.setFillColor(243, 244, 246);
+  doc.rect(boxX, finalY, boxWidth, boxHeight, 'F');
+  doc.setDrawColor(229, 231, 235);
+  doc.rect(boxX, finalY, boxWidth, boxHeight, 'S');
+
+  doc.setFontSize(10);
+  doc.setTextColor(75, 85, 99);
+  doc.setFont('helvetica', 'normal');
+  
+  doc.text('Total Amount:', boxX + 5, finalY + 8);
+  doc.setTextColor(99, 102, 241);
+  doc.setFont('helvetica', 'bold');
+  doc.text(`PKR ${total.toFixed(2)}`, boxX + boxWidth - 5, finalY + 8, { align: 'right' });
+
+  doc.setTextColor(75, 85, 99);
+  doc.setFont('helvetica', 'normal');
+  doc.text('Total Paid:', boxX + 5, finalY + 16);
+  doc.setTextColor(16, 185, 129);
+  doc.setFont('helvetica', 'bold');
+  doc.text(`PKR ${totalPaid.toFixed(2)}`, boxX + boxWidth - 5, finalY + 16, { align: 'right' });
+
+  doc.setDrawColor(99, 102, 241);
+  doc.setLineWidth(0.5);
+  doc.line(boxX + 5, finalY + 20, boxX + boxWidth - 5, finalY + 20);
+
+  doc.setTextColor(31, 41, 55);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(12);
+  doc.text('BALANCE:', boxX + 5, finalY + 28);
+  doc.setTextColor(239, 68, 68);
+  doc.setFontSize(14);
+  doc.text(`PKR ${totalBalance.toFixed(2)}`, boxX + boxWidth - 5, finalY + 28, { align: 'right' });
+
+  // 5. FOOTER
+  const pageHeight = doc.internal.pageSize.height;
+  doc.setDrawColor(209, 213, 219);
+  doc.setLineWidth(0.3);
+  doc.setLineDash([2, 2], 0);
+  doc.line(14, pageHeight - 25, 196, pageHeight - 25);
+
+  doc.setFontSize(10);
+  doc.setTextColor(99, 102, 241);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Shukriya! Aapke business ke liye shukriya.', 105, pageHeight - 18, { align: 'center' });
+
+  doc.setFontSize(9);
+  doc.setTextColor(107, 114, 128);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`${shopName} — ${shopPhone}`, 105, pageHeight - 13, { align: 'center' });
+  doc.text('This is a computer-generated document.', 105, pageHeight - 9, { align: 'center' });
+
   const filename = `Credit-Khata_${name.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`;
-  const blob = pdf.output('blob');
+  const blob = doc.output('blob');
 
   return { blob, filename, customerName: name, total, totalPaid, totalBalance };
 }
 
 // ============================================
-// 📥 DOWNLOAD PDF DIRECTLY
+// 📥 DOWNLOAD PDF
 // ============================================
 async function downloadPdfDirect(customerKey) {
   const btn = document.querySelector(`[data-download-pdf="${customerKey}"]`);

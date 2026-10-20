@@ -1,558 +1,711 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
-<meta name="theme-color" content="#6366f1" />
-<title>Credit Management — H.S Computers & CCTV</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css" />
-<link rel="stylesheet" href="css/dashboard.css" />
 
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <meta name="theme-color" content="#6366f1" />
+  <title>Credit Management — H.S Computers & CCTV</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/dashboard.css" />
 <!-- PDF Libraries -->
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 
-<style>
-  /* ============================================
+  <style>
+    /* ============================================
      CREDIT PAGE STYLES
      ============================================ */
-  .credit-card {
-    background: rgba(255,255,255,0.05);
-    backdrop-filter: blur(20px);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 22px;
-    margin-bottom: 16px;
-    transition: var(--transition);
-    position: relative;
-    overflow: hidden;
-  }
-  .credit-card::before {
-    content: '';
-    position: absolute;
-    left: 0; top: 0; bottom: 0;
-    width: 4px;
-  }
-  .credit-card[data-status="Pending"]::before { background: linear-gradient(180deg, #ef4444, #dc2626); }
-  .credit-card[data-status="Partial"]::before { background: linear-gradient(180deg, #f59e0b, #d97706); }
-  .credit-card[data-status="Paid"]::before { background: linear-gradient(180deg, #10b981, #059669); }
+    .credit-card {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 22px;
+      margin-bottom: 16px;
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
 
-  .credit-card:hover {
-    transform: translateY(-3px);
-    border-color: rgba(99,102,241,0.4);
-    box-shadow: 0 15px 35px rgba(0,0,0,0.25);
-  }
+    .credit-card::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+    }
 
-  .credit-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 12px;
-    flex-wrap: wrap;
-    margin-bottom: 14px;
-  }
+    .credit-card[data-status="Pending"]::before {
+      background: linear-gradient(180deg, #ef4444, #dc2626);
+    }
 
-  .customer-name {
-    font-size: 20px;
-    font-weight: 800;
-    color: var(--text);
-    letter-spacing: -0.5px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
+    .credit-card[data-status="Partial"]::before {
+      background: linear-gradient(180deg, #f59e0b, #d97706);
+    }
 
-  .status-badge {
-    padding: 5px 12px;
-    border-radius: 99px;
-    font-size: 11px;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    white-space: nowrap;
-  }
-  .status-badge.Pending { background: rgba(239,68,68,0.2); color: #fca5a5; }
-  .status-badge.Partial { background: rgba(245,158,11,0.2); color: #fbbf24; }
-  .status-badge.Paid { background: rgba(16,185,129,0.2); color: #6ee7b7; }
+    .credit-card[data-status="Paid"]::before {
+      background: linear-gradient(180deg, #10b981, #059669);
+    }
 
-  .credit-summary {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 12px;
-    margin-bottom: 16px;
-  }
+    .credit-card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(99, 102, 241, 0.4);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
+    }
 
-  .summary-box {
-    background: rgba(255,255,255,0.04);
-    border-radius: 10px;
-    padding: 12px;
-    text-align: center;
-  }
-  .summary-box .label {
-    font-size: 11px;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    font-weight: 700;
-    margin-bottom: 6px;
-  }
-  .summary-box .value {
-    font-size: 18px;
-    font-weight: 800;
-    color: var(--text);
-  }
-  .summary-box.paid .value { color: #10b981; }
-  .summary-box.balance .value { color: #ef4444; }
-  .summary-box.total .value { color: #6366f1; }
+    .credit-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
 
-  .progress-bar {
-    height: 8px;
-    background: rgba(255,255,255,0.08);
-    border-radius: 99px;
-    overflow: hidden;
-    margin-bottom: 16px;
-  }
-  .progress-bar-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #10b981, #059669);
-    border-radius: 99px;
-    transition: width 0.5s ease;
-  }
+    .customer-name {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--text);
+      letter-spacing: -0.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
 
-  .credit-entries {
-    background: rgba(255,255,255,0.03);
-    border-radius: 12px;
-    padding: 12px;
-    margin-bottom: 16px;
-  }
+    .status-badge {
+      padding: 5px 12px;
+      border-radius: 99px;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      white-space: nowrap;
+    }
 
-  .entry-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    padding: 10px 12px;
-    border-radius: 8px;
-    margin-bottom: 6px;
-    background: rgba(255,255,255,0.03);
-    gap: 10px;
-    flex-wrap: wrap;
-  }
-  .entry-row:last-child { margin-bottom: 0; }
-  .entry-row:hover { background: rgba(255,255,255,0.06); }
+    .status-badge.Pending {
+      background: rgba(239, 68, 68, 0.2);
+      color: #fca5a5;
+    }
 
-  .entry-info { flex: 1; min-width: 200px; }
-  .entry-desc { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
-  .entry-meta { font-size: 12px; color: var(--text-muted); display: flex; gap: 10px; flex-wrap: wrap; }
+    .status-badge.Partial {
+      background: rgba(245, 158, 11, 0.2);
+      color: #fbbf24;
+    }
 
-  .entry-amount {
-    font-size: 16px;
-    font-weight: 800;
-    color: #6366f1;
-    text-align: right;
-  }
-  .entry-amount.paid { color: #10b981; }
+    .status-badge.Paid {
+      background: rgba(16, 185, 129, 0.2);
+      color: #6ee7b7;
+    }
 
-  .entry-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+    .credit-summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
 
-  .action-btn {
-    padding: 6px 10px;
-    border-radius: 6px;
-    font-size: 12px;
-    font-weight: 600;
-    border: none;
-    cursor: pointer;
-    transition: var(--transition);
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    white-space: nowrap;
-  }
-  .action-btn.pay { background: linear-gradient(135deg, #10b981, #059669); color: #fff; }
-  .action-btn.edit { background: rgba(99,102,241,0.2); color: #a5b4fc; border: 1px solid rgba(99,102,241,0.3); }
-  .action-btn.delete { background: rgba(239,68,68,0.15); color: #fca5a5; border: 1px solid rgba(239,68,68,0.3); }
-  .action-btn.wa { background: linear-gradient(135deg, #25D366, #128C7E); color: #fff; }
-  .action-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 15px rgba(0,0,0,0.2); }
-  .action-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .summary-box {
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: 10px;
+      padding: 12px;
+      text-align: center;
+    }
 
-  .card-actions {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    padding-top: 14px;
-    border-top: 1px dashed var(--border);
-  }
+    .summary-box .label {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
 
-  /* Payment History */
-  .payment-history {
-    margin-top: 8px;
-    padding: 8px 10px;
-    background: rgba(16,185,129,0.06);
-    border-radius: 8px;
-    font-size: 11px;
-    border-left: 3px solid #10b981;
-  }
-  .payment-history-title {
-    font-weight: 700;
-    color: #10b981;
-    margin-bottom: 6px;
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-  .payment-history-row {
-    display: flex;
-    justify-content: space-between;
-    padding: 3px 0;
-    color: var(--text-muted);
-    gap: 10px;
-  }
-  .payment-history-row strong { color: #10b981; }
+    .summary-box .value {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--text);
+    }
 
-  /* Paid Badge */
-  .paid-badge {
-    margin-top: 6px;
-    font-size: 11px;
-    color: #10b981;
-    background: rgba(16,185,129,0.1);
-    padding: 4px 10px;
-    border-radius: 6px;
-    display: inline-block;
-    font-weight: 600;
-  }
-  .partial-badge {
-    margin-top: 6px;
-    font-size: 11px;
-    color: #f59e0b;
-    background: rgba(245,158,11,0.1);
-    padding: 4px 10px;
-    border-radius: 6px;
-    display: inline-block;
-    font-weight: 600;
-  }
+    .summary-box.paid .value {
+      color: #10b981;
+    }
 
-  /* Modals */
-  .modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.75);
-    backdrop-filter: blur(6px);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    z-index: 1000;
-  }
-  .modal-overlay.active { display: flex; }
+    .summary-box.balance .value {
+      color: #ef4444;
+    }
 
-  .modal-box {
-    background: #1e293b;
-    border: 1px solid var(--border);
-    border-radius: 18px;
-    padding: 28px;
-    max-width: 520px;
-    width: 100%;
-    max-height: 90vh;
-    overflow-y: auto;
-  }
+    .summary-box.total .value {
+      color: #6366f1;
+    }
 
-  .modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-  }
-  .modal-header h3 { font-size: 18px; font-weight: 800; margin: 0; }
-  .modal-close {
-    background: none; border: none; color: var(--text-muted);
-    font-size: 26px; cursor: pointer; padding: 0; line-height: 1;
-  }
-  .modal-close:hover { color: #ef4444; }
+    .progress-bar {
+      height: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 99px;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
 
-  .modal-box label {
-    display: block;
-    font-size: 13px;
-    color: var(--text-muted);
-    margin-bottom: 6px;
-    margin-top: 14px;
-    font-weight: 600;
-  }
-  .modal-box input,
-  .modal-box select,
-  .modal-box textarea {
-    width: 100%;
-    padding: 10px 12px;
-    border-radius: 8px;
-    border: 1px solid var(--border);
-    background: rgba(255,255,255,0.05);
-    color: var(--text);
-    font-family: inherit;
-    font-size: 14px;
-  }
-  .modal-box input:focus,
-  .modal-box select:focus,
-  .modal-box textarea:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(99,102,241,0.2);
-  }
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #10b981, #059669);
+      border-radius: 99px;
+      transition: width 0.5s ease;
+    }
 
-  .modal-actions {
-    display: flex;
-    gap: 10px;
-    justify-content: flex-end;
-    margin-top: 22px;
-  }
+    .credit-entries {
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 16px;
+    }
 
-  .filter-bar {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    margin-bottom: 20px;
-  }
-  .filter-bar input { flex: 1; min-width: 200px; }
-  .filter-bar select { max-width: 180px; }
+    .entry-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 10px 12px;
+      border-radius: 8px;
+      margin-bottom: 6px;
+      background: rgba(255, 255, 255, 0.03);
+      gap: 10px;
+      flex-wrap: wrap;
+    }
 
-  .bulk-actions {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    margin-top: 20px;
-    padding: 16px;
-    background: rgba(255,255,255,0.04);
-    border-radius: 12px;
-    border: 1px solid var(--border);
-  }
+    .entry-row:last-child {
+      margin-bottom: 0;
+    }
 
-  .card-checkbox {
-    width: 20px;
-    height: 20px;
-    cursor: pointer;
-    accent-color: #6366f1;
-  }
+    .entry-row:hover {
+      background: rgba(255, 255, 255, 0.06);
+    }
 
-  .customer-entries-count {
-    font-size: 12px;
-    color: var(--text-muted);
-    font-weight: 600;
-    background: rgba(255,255,255,0.06);
-    padding: 3px 10px;
-    border-radius: 99px;
-  }
+    .entry-info {
+      flex: 1;
+      min-width: 200px;
+    }
 
-  @media (max-width: 640px) {
-    .customer-name { font-size: 17px; }
-    .summary-box .value { font-size: 15px; }
-    .modal-box { padding: 20px; }
-  }
-</style>
+    .entry-desc {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .entry-meta {
+      font-size: 12px;
+      color: var(--text-muted);
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .entry-amount {
+      font-size: 16px;
+      font-weight: 800;
+      color: #6366f1;
+      text-align: right;
+    }
+
+    .entry-amount.paid {
+      color: #10b981;
+    }
+
+    .entry-actions {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .action-btn {
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+    }
+
+    .action-btn.pay {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #fff;
+    }
+
+    .action-btn.edit {
+      background: rgba(99, 102, 241, 0.2);
+      color: #a5b4fc;
+      border: 1px solid rgba(99, 102, 241, 0.3);
+    }
+
+    .action-btn.delete {
+      background: rgba(239, 68, 68, 0.15);
+      color: #fca5a5;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .action-btn.wa {
+      background: linear-gradient(135deg, #25D366, #128C7E);
+      color: #fff;
+    }
+
+    .action-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .action-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding-top: 14px;
+      border-top: 1px dashed var(--border);
+    }
+
+    /* Payment History */
+    .payment-history {
+      margin-top: 8px;
+      padding: 8px 10px;
+      background: rgba(16, 185, 129, 0.06);
+      border-radius: 8px;
+      font-size: 11px;
+      border-left: 3px solid #10b981;
+    }
+
+    .payment-history-title {
+      font-weight: 700;
+      color: #10b981;
+      margin-bottom: 6px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .payment-history-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 3px 0;
+      color: var(--text-muted);
+      gap: 10px;
+    }
+
+    .payment-history-row strong {
+      color: #10b981;
+    }
+
+    /* Paid Badge */
+    .paid-badge {
+      margin-top: 6px;
+      font-size: 11px;
+      color: #10b981;
+      background: rgba(16, 185, 129, 0.1);
+      padding: 4px 10px;
+      border-radius: 6px;
+      display: inline-block;
+      font-weight: 600;
+    }
+
+    .partial-badge {
+      margin-top: 6px;
+      font-size: 11px;
+      color: #f59e0b;
+      background: rgba(245, 158, 11, 0.1);
+      padding: 4px 10px;
+      border-radius: 6px;
+      display: inline-block;
+      font-weight: 600;
+    }
+
+    /* Modals */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(6px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 1000;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-box {
+      background: #1e293b;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 28px;
+      max-width: 520px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .modal-header h3 {
+      font-size: 18px;
+      font-weight: 800;
+      margin: 0;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 26px;
+      cursor: pointer;
+      padding: 0;
+      line-height: 1;
+    }
+
+    .modal-close:hover {
+      color: #ef4444;
+    }
+
+    .modal-box label {
+      display: block;
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      margin-top: 14px;
+      font-weight: 600;
+    }
+
+    .modal-box input,
+    .modal-box select,
+    .modal-box textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 14px;
+    }
+
+    .modal-box input:focus,
+    .modal-box select:focus,
+    .modal-box textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 22px;
+    }
+
+    .filter-bar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    .filter-bar input {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .filter-bar select {
+      max-width: 180px;
+    }
+
+    .bulk-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+      padding: 16px;
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+
+    .card-checkbox {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+      accent-color: #6366f1;
+    }
+
+    .customer-entries-count {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 600;
+      background: rgba(255, 255, 255, 0.06);
+      padding: 3px 10px;
+      border-radius: 99px;
+    }
+
+    @media (max-width: 640px) {
+      .customer-name {
+        font-size: 17px;
+      }
+
+      .summary-box .value {
+        font-size: 15px;
+      }
+
+      .modal-box {
+        padding: 20px;
+      }
+    }
+  </style>
 </head>
+
 <body>
-<div class="orb orb-1"></div>
-<div class="orb orb-2"></div>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
 
-<header class="topbar">
-  <div class="brand">💳 Credit Management <span class="badge">Admin</span></div>
-  <div style="display:flex;gap:10px;flex-wrap:wrap">
-    <button class="btn ghost" onclick="window.location.href='admin.html'">← Dashboard</button>
-    <button class="btn ghost" id="logoutBtn">Logout</button>
-  </div>
-</header>
+  <header class="topbar">
+    <div class="brand">💳 Credit Management <span class="badge">Admin</span></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn ghost" onclick="window.location.href='admin.html'">← Dashboard</button>
+      <button class="btn ghost" id="logoutBtn">Logout</button>
+    </div>
+  </header>
 
-<main class="container">
+  <main class="container">
 
-  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:20px">
-    <h2 style="margin:0">💳 Credit Khata</h2>
-    <button class="btn primary" id="newCreditBtn">+ New Credit Entry</button>
-  </div>
+    <div
+      style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:20px">
+      <h2 style="margin:0">💳 Credit Khata</h2>
+      <button class="btn primary" id="newCreditBtn">+ New Credit Entry</button>
+    </div>
 
-  <div class="cards" style="margin-bottom:20px">
-    <div class="card"><div class="k">Total Credit</div><div class="v" id="statTotal">PKR 0</div></div>
-    <div class="card"><div class="k">Pending</div><div class="v" id="statPending" style="color:#ef4444">PKR 0</div></div>
-    <div class="card"><div class="k">Partial</div><div class="v" id="statPartial" style="color:#f59e0b">PKR 0</div></div>
-    <div class="card"><div class="k">Received</div><div class="v" id="statPaid" style="color:#10b981">PKR 0</div></div>
-  </div>
+    <div class="cards" style="margin-bottom:20px">
+      <div class="card">
+        <div class="k">Total Credit</div>
+        <div class="v" id="statTotal">PKR 0</div>
+      </div>
+      <div class="card">
+        <div class="k">Pending</div>
+        <div class="v" id="statPending" style="color:#ef4444">PKR 0</div>
+      </div>
+      <div class="card">
+        <div class="k">Partial</div>
+        <div class="v" id="statPartial" style="color:#f59e0b">PKR 0</div>
+      </div>
+      <div class="card">
+        <div class="k">Received</div>
+        <div class="v" id="statPaid" style="color:#10b981">PKR 0</div>
+      </div>
+    </div>
 
-  <div class="filter-bar">
-    <input type="search" id="creditSearch" placeholder="🔍 Search customer name or description..." />
-    <select id="creditStatusFilter">
-      <option value="">All Status</option>
-      <option value="Pending">⏳ Pending</option>
-      <option value="Partial">🔶 Partial</option>
-      <option value="Paid">✅ Paid</option>
-    </select>
-    <select id="creditSortFilter">
-      <option value="recent">🕐 Recent First</option>
-      <option value="amount">💰 Highest Amount</option>
-      <option value="name">🔤 Name A-Z</option>
-      <option value="balance">📊 Highest Balance</option>
-    </select>
-  </div>
+    <div class="filter-bar">
+      <input type="search" id="creditSearch" placeholder="🔍 Search customer name or description..." />
+      <select id="creditStatusFilter">
+        <option value="">All Status</option>
+        <option value="Pending">⏳ Pending</option>
+        <option value="Partial">🔶 Partial</option>
+        <option value="Paid">✅ Paid</option>
+      </select>
+      <select id="creditSortFilter">
+        <option value="recent">🕐 Recent First</option>
+        <option value="amount">💰 Highest Amount</option>
+        <option value="name">🔤 Name A-Z</option>
+        <option value="balance">📊 Highest Balance</option>
+      </select>
+    </div>
 
-  <div id="creditList"></div>
+    <div id="creditList"></div>
 
-  <div class="bulk-actions">
-    <button class="btn" id="downloadCSVBtn" style="background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none">
-      📥 Download CSV
-    </button>
-    <button class="btn danger" id="bulkDeleteBtn" disabled>
-      🗑 Delete Selected (<span id="selectedCount">0</span>)
-    </button>
-    <span class="muted" style="font-size:13px;margin-left:auto;display:flex;align-items:center;gap:8px">
-      <span id="totalEntriesCount"></span>
-    </span>
-  </div>
+    <div class="bulk-actions">
+      <button class="btn" id="downloadCSVBtn"
+        style="background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none">
+        📥 Download CSV
+      </button>
+      <button class="btn danger" id="bulkDeleteBtn" disabled>
+        🗑 Delete Selected (<span id="selectedCount">0</span>)
+      </button>
+      <span class="muted" style="font-size:13px;margin-left:auto;display:flex;align-items:center;gap:8px">
+        <span id="totalEntriesCount"></span>
+      </span>
+    </div>
 
-</main>
+  </main>
 
-<!-- ============================================
+  <!-- ============================================
      CREDIT ENTRY MODAL
      ============================================ -->
-<div class="modal-overlay" id="creditModal">
-  <div class="modal-box">
-    <div class="modal-header">
-      <h3 id="modalTitle">➕ New Credit Entry</h3>
-      <button class="modal-close" id="modalCloseBtn">×</button>
-    </div>
-    <form id="creditForm">
-      <label>Customer Name *</label>
-      <input type="text" id="cName" required placeholder="e.g., Sajjad" />
-
-      <label>Phone (optional — WhatsApp ke liye)</label>
-      <input type="text" id="cPhone" placeholder="0300-1234567" />
-
-      <label>Description *</label>
-      <input type="text" id="cDescription" required placeholder="e.g., 10 Camera Installation" />
-
-      <label>Service Type</label>
-      <select id="cServiceType">
-        <option value="">-- Select --</option>
-        <option value="CCTV Installation">📹 CCTV Installation</option>
-        <option value="CCTV Repair">📹 CCTV Repair</option>
-        <option value="Computer Repair">💻 Computer Repair</option>
-        <option value="Laptop Repair">💻 Laptop Repair</option>
-        <option value="Networking">🌐 Networking</option>
-        <option value="Installation">⚙️ Installation</option>
-        <option value="Maintenance">🛠️ Maintenance</option>
-        <option value="Site Visit">📍 Site Visit</option>
-        <option value="Other">❓ Other</option>
-      </select>
-
-      <label>Amount (optional)</label>
-      <input type="number" id="cAmount" step="0.01" min="0" placeholder="0" />
-
-      <label>Entry Date *</label>
-      <input type="date" id="cDate" required />
-
-      <label>Due Date (optional)</label>
-      <input type="date" id="cDueDate" />
-
-      <label>Notes</label>
-      <textarea id="cNotes" rows="2" placeholder="Any additional info..."></textarea>
-
-      <div class="modal-actions">
-        <button type="button" class="btn ghost" id="modalCancelBtn">Cancel</button>
-        <button type="submit" class="btn primary" id="modalSubmitBtn">✅ Save Entry</button>
+  <div class="modal-overlay" id="creditModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="modalTitle">➕ New Credit Entry</h3>
+        <button class="modal-close" id="modalCloseBtn">×</button>
       </div>
-    </form>
-  </div>
-</div>
+      <form id="creditForm">
+        <label>Customer Name *</label>
+        <input type="text" id="cName" required placeholder="e.g., Sajjad" />
 
-<!-- ============================================
+        <label>Phone (optional — WhatsApp ke liye)</label>
+        <input type="text" id="cPhone" placeholder="0300-1234567" />
+
+        <label>Description *</label>
+        <input type="text" id="cDescription" required placeholder="e.g., 10 Camera Installation" />
+
+        <label>Service Type</label>
+        <select id="cServiceType">
+          <option value="">-- Select --</option>
+          <option value="CCTV Installation">📹 CCTV Installation</option>
+          <option value="CCTV Repair">📹 CCTV Repair</option>
+          <option value="Computer Repair">💻 Computer Repair</option>
+          <option value="Laptop Repair">💻 Laptop Repair</option>
+          <option value="Networking">🌐 Networking</option>
+          <option value="Installation">⚙️ Installation</option>
+          <option value="Maintenance">🛠️ Maintenance</option>
+          <option value="Site Visit">📍 Site Visit</option>
+          <option value="Other">❓ Other</option>
+        </select>
+
+        <label>Amount (optional)</label>
+        <input type="number" id="cAmount" step="0.01" min="0" placeholder="0" />
+
+        <label>Entry Date *</label>
+        <input type="date" id="cDate" required />
+
+        <label>Due Date (optional)</label>
+        <input type="date" id="cDueDate" />
+
+        <label>Notes</label>
+        <textarea id="cNotes" rows="2" placeholder="Any additional info..."></textarea>
+
+        <div class="modal-actions">
+          <button type="button" class="btn ghost" id="modalCancelBtn">Cancel</button>
+          <button type="submit" class="btn primary" id="modalSubmitBtn">✅ Save Entry</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ============================================
      PAYMENT MODAL
      ============================================ -->
-<div class="modal-overlay" id="paymentModal">
-  <div class="modal-box">
-    <div class="modal-header">
-      <h3>💰 Record Payment</h3>
-      <button class="modal-close" id="paymentCloseBtn">×</button>
-    </div>
-    <form id="paymentForm">
-      <div style="background:rgba(99,102,241,0.1);padding:14px;border-radius:10px;margin-bottom:16px">
-        <div style="font-size:13px;color:var(--text-muted);margin-bottom:4px">Customer</div>
-        <div style="font-weight:700;font-size:16px" id="payCustomerName">-</div>
-        <div style="font-size:13px;color:var(--text-muted);margin-top:8px" id="payEntryDesc">-</div>
-        <div style="display:flex;justify-content:space-between;margin-top:12px;font-size:14px">
-          <span style="color:var(--text-muted)">Total: <strong id="payTotal" style="color:var(--text)">PKR 0</strong></span>
-          <span style="color:var(--text-muted)">Balance: <strong id="payBalance" style="color:#ef4444">PKR 0</strong></span>
+  <div class="modal-overlay" id="paymentModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>💰 Record Payment</h3>
+        <button class="modal-close" id="paymentCloseBtn">×</button>
+      </div>
+      <form id="paymentForm">
+        <div style="background:rgba(99,102,241,0.1);padding:14px;border-radius:10px;margin-bottom:16px">
+          <div style="font-size:13px;color:var(--text-muted);margin-bottom:4px">Customer</div>
+          <div style="font-weight:700;font-size:16px" id="payCustomerName">-</div>
+          <div style="font-size:13px;color:var(--text-muted);margin-top:8px" id="payEntryDesc">-</div>
+          <div style="display:flex;justify-content:space-between;margin-top:12px;font-size:14px">
+            <span style="color:var(--text-muted)">Total: <strong id="payTotal" style="color:var(--text)">PKR
+                0</strong></span>
+            <span style="color:var(--text-muted)">Balance: <strong id="payBalance" style="color:#ef4444">PKR
+                0</strong></span>
+          </div>
         </div>
-      </div>
 
-      <label>Amount Received *</label>
-      <input type="number" id="payAmount" required step="0.01" min="0" placeholder="5000" />
+        <label>Amount Received *</label>
+        <input type="number" id="payAmount" required step="0.01" min="0" placeholder="5000" />
 
-      <label>Payment Mode *</label>
-      <select id="payMode" required>
-        <option value="Cash">💵 Cash</option>
-        <option value="UPI">📱 UPI</option>
-        <option value="Card">💳 Card</option>
-        <option value="Bank Transfer">🏦 Bank Transfer</option>
-      </select>
+        <label>Payment Mode *</label>
+        <select id="payMode" required>
+          <option value="Cash">💵 Cash</option>
+          <option value="UPI">📱 UPI</option>
+          <option value="Card">💳 Card</option>
+          <option value="Bank Transfer">🏦 Bank Transfer</option>
+        </select>
 
-      <label>Payment Date *</label>
-      <input type="date" id="payDate" required />
+        <label>Payment Date *</label>
+        <input type="date" id="payDate" required />
 
-      <label>Notes (optional)</label>
-      <textarea id="payNotes" rows="2" placeholder="Any notes..."></textarea>
+        <label>Notes (optional)</label>
+        <textarea id="payNotes" rows="2" placeholder="Any notes..."></textarea>
 
-      <div class="modal-actions">
-        <button type="button" class="btn ghost" id="paymentCancelBtn">Cancel</button>
-        <button type="submit" class="btn primary" id="paymentSubmitBtn">💰 Record Payment</button>
-      </div>
-    </form>
+        <div class="modal-actions">
+          <button type="button" class="btn ghost" id="paymentCancelBtn">Cancel</button>
+          <button type="submit" class="btn primary" id="paymentSubmitBtn">💰 Record Payment</button>
+        </div>
+      </form>
+    </div>
   </div>
-</div>
 
-<!-- ============================================
+  <!-- ============================================
      WHATSAPP SEND MODAL
      ============================================ -->
-<div class="modal-overlay" id="whatsappModal">
-  <div class="modal-box">
-    <div class="modal-header">
-      <h3>📱 Send Credit Khata via WhatsApp</h3>
-      <button class="modal-close" id="whatsappCloseBtn">×</button>
-    </div>
-    <form id="whatsappForm">
-      <div style="background:rgba(37,211,102,0.1);padding:14px;border-radius:10px;margin-bottom:16px">
-        <div style="font-size:13px;color:var(--text-muted);margin-bottom:4px">Sending PDF for:</div>
-        <div style="font-weight:700;font-size:16px" id="whatsappCustomerName">-</div>
-        <div style="font-size:13px;color:var(--text-muted);margin-top:8px">
-          Total: <strong id="whatsappTotal" style="color:#6366f1">PKR 0</strong> • 
-          Balance: <strong id="whatsappBalance" style="color:#ef4444">PKR 0</strong>
+  <div class="modal-overlay" id="whatsappModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>📱 Send Credit Khata via WhatsApp</h3>
+        <button class="modal-close" id="whatsappCloseBtn">×</button>
+      </div>
+      <form id="whatsappForm">
+        <div style="background:rgba(37,211,102,0.1);padding:14px;border-radius:10px;margin-bottom:16px">
+          <div style="font-size:13px;color:var(--text-muted);margin-bottom:4px">Sending PDF for:</div>
+          <div style="font-weight:700;font-size:16px" id="whatsappCustomerName">-</div>
+          <div style="font-size:13px;color:var(--text-muted);margin-top:8px">
+            Total: <strong id="whatsappTotal" style="color:#6366f1">PKR 0</strong> •
+            Balance: <strong id="whatsappBalance" style="color:#ef4444">PKR 0</strong>
+          </div>
         </div>
-      </div>
 
-      <label>WhatsApp Number *</label>
-      <input type="text" id="whatsappNumber" required placeholder="0300-1234567" />
-      <p style="font-size:12px;color:var(--text-muted);margin-top:6px">
-        📌 Apna number ya customer ka — jisko PDF bhejni hai.
-      </p>
+        <label>WhatsApp Number *</label>
+        <input type="text" id="whatsappNumber" required placeholder="0300-1234567" />
+        <p style="font-size:12px;color:var(--text-muted);margin-top:6px">
+          📌 Apna number ya customer ka — jisko PDF bhejni hai.
+        </p>
 
-      <label>Message</label>
-      <textarea id="whatsappMessage" rows="5"></textarea>
+        <label>Message</label>
+        <textarea id="whatsappMessage" rows="5"></textarea>
 
-      <div style="background:rgba(245,158,11,0.1);padding:12px;border-radius:8px;margin-top:14px;font-size:12px;color:#fbbf24;line-height:1.6">
-        <strong>📋 Steps:</strong><br>
-        1. PDF auto-download hogi<br>
-        2. WhatsApp khulega<br>
-        3. PDF attach karo (📎 icon)<br>
-        4. Send dabao
-      </div>
+        <div
+          style="background:rgba(245,158,11,0.1);padding:12px;border-radius:8px;margin-top:14px;font-size:12px;color:#fbbf24;line-height:1.6">
+          <strong>📋 Steps:</strong><br>
+          1. PDF auto-download hogi<br>
+          2. WhatsApp khulega<br>
+          3. PDF attach karo (📎 icon)<br>
+          4. Send dabao
+        </div>
 
-      <div class="modal-actions">
-        <button type="button" class="btn ghost" id="whatsappCancelBtn">Cancel</button>
-        <button type="submit" class="btn primary" id="whatsappSubmitBtn" 
-          style="background:linear-gradient(135deg,#25D366,#128C7E)">
-          📱 Generate PDF & Open WhatsApp
-        </button>
-      </div>
-    </form>
+        <div class="modal-actions">
+          <button type="button" class="btn ghost" id="whatsappCancelBtn">Cancel</button>
+          <button type="submit" class="btn primary" id="whatsappSubmitBtn"
+            style="background:linear-gradient(135deg,#25D366,#128C7E)">
+            📱 Generate PDF & Open WhatsApp
+          </button>
+        </div>
+      </form>
+    </div>
   </div>
-</div>
 
-<script type="module" src="js/credit.js"></script>
+  <script type="module" src="js/credit.js"></script>
 </body>
+
 </html>
