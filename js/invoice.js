@@ -1,6 +1,9 @@
 import { supabase } from './supabase-config.js';
 import {
-  formatMoney, formatDate, requireAuth, escapeHtml,
+  formatMoney,
+  formatDate,
+  requireAuth,
+  escapeHtml,
   generateInvoiceNumber
 } from './utils.js';
 
@@ -8,6 +11,8 @@ const $ = (id) => document.getElementById(id);
 let me = null;
 let items = [];
 let existingId = null;
+let isOwner = false;
+let isAdminUser = false;
 
 // ============================================
 // INIT
@@ -17,58 +22,36 @@ let existingId = null;
   if (!ctx) return;
   me = ctx.profile;
 
-  // Shop header fill karo
-  // Logo show karo (agar hai)
-  if (me.shop_logo_url) {
-    const logoEl = $('shopLogo');
-    if (logoEl) {
-      logoEl.src = me.shop_logo_url;
-      logoEl.classList.remove('hidden');
-      logoEl.onerror = () => logoEl.classList.add('hidden'); // fail safe
-    }
+  if (!['admin', 'worker'].includes(me.role)) {
+    alert('⚠️ Aapko is page ka access nahi hai.');
+    window.location.href = 'index.html';
+    return;
   }
+
+  isAdminUser = me.role === 'admin';
+
+  // Shop header fill karo
   $('shopNameDisplay').textContent = me.shop_name || 'H.S Computers & CCTV';
   $('shopAddrDisplay').textContent = me.shop_address || '';
   $('shopPhoneDisplay').textContent = me.shop_phone ? '📞 ' + me.shop_phone : '';
   $('shopEmailDisplay').textContent = me.shop_email ? '✉️ ' + me.shop_email : '';
 
-  const gstinEl = $('shopGstinDisplay');
-  if (gstinEl) {
-    gstinEl.textContent = me.shop_gstin ? 'GSTIN: ' + me.shop_gstin : '';
-    gstinEl.style.display = me.shop_gstin ? 'block' : 'none';
+  // Logo
+  if (me.shop_logo_url) {
+    const logoEl = $('shopLogo');
+    if (logoEl) {
+      logoEl.src = me.shop_logo_url;
+      logoEl.classList.remove('hidden');
+      logoEl.onerror = () => logoEl.classList.add('hidden');
+    }
   }
 
+  // URL check
   const params = new URLSearchParams(location.search);
   existingId = params.get('id');
 
   if (existingId) {
     await loadExisting(existingId);
-
-    // Check karo — ye invoice current user ki hai?
-    const { data: inv } = await supabase
-      .from('invoices')
-      .select('created_by')
-      .eq('id', existingId)
-      .single();
-
-    const isOwner = inv?.created_by === me.id;
-    const isAdminUser = me.role === 'admin';
-
-    // Sirf owner ya admin hi edit kar sakte hain
-    if (!isOwner && !isAdminUser) {
-      // Worker doosre ki invoice dekh raha hai — sirf print
-      const saveBtn = $('saveBtn');
-      if (saveBtn) {
-        saveBtn.textContent = '👁 View Only';
-        saveBtn.disabled = true;
-        saveBtn.title = 'Ye invoice admin ki hai — sirf print kar sakte ho';
-        saveBtn.style.opacity = '0.5';
-        saveBtn.style.cursor = 'not-allowed';
-      }
-    } else {
-      // Owner ya admin — Save button hide karo (view mode)
-      $('saveBtn').classList.add('hidden');
-    }
   } else {
     $('invNo').textContent = generateInvoiceNumber();
     $('invDate').textContent = formatDate();
@@ -76,36 +59,47 @@ let existingId = null;
     addItem();
   }
 
-  // Event bindings
-  $('addItemBtn').addEventListener('click', () => addItem());
-  $('discount').addEventListener('input', recalc);
-  $('saveBtn').addEventListener('click', saveInvoice);
-
-  $('printBtn').addEventListener('click', () => {
-    syncPrintFields();               // 👈 print se pehle sync
-    setTimeout(() => window.print(), 100);  // 👈 animation ke liye chhota delay
-  });
-
-// Customer field → print field live sync
-$('custName')?.addEventListener('input', syncPrintFields);
-
+  bindEvents();
   syncPrintFields();
 })();
 
 // ============================================
-// PRINT-ONLY FIELDS SYNC
+// EVENT BINDINGS
 // ============================================
-function syncPrintFields() {
-  const setText = (id, val) => {
-    const el = $(id);
-    if (el) el.textContent = val || '';
-  };
+function bindEvents() {
+  $('addItemBtn')?.addEventListener('click', () => addItem());
 
-  setText('custNameP', $('custName')?.value);
+  ['discount', 'amountReceived'].forEach((id) => {
+    $(id)?.addEventListener('input', recalc);
+  });
+
+  $('paymentStatus')?.addEventListener('change', (e) => {
+    // Sirf tab amount auto-fill karo jab user khud 'Paid' select kare
+    if (e.target.value === 'Paid') {
+      const grand = parseFloat($('grandTotal').textContent.replace(/[^0-9.-]+/g, "")) || 0;
+      $('amountReceived').value = grand.toFixed(2);
+    } else if (e.target.value === 'Pending') {
+      $('amountReceived').value = 0;
+    }
+    // Partial me user khud amount likhega
+    recalc();
+  });
+
+  ['custName', 'paymentMode', 'paymentStatus'].forEach((id) => {
+    $(id)?.addEventListener('input', syncPrintFields);
+    $(id)?.addEventListener('change', syncPrintFields);
+  });
+
+  $('saveBtn')?.addEventListener('click', saveInvoice);
+
+  $('printBtn')?.addEventListener('click', () => {
+    syncPrintFields();
+    setTimeout(() => window.print(), 100);
+  });
 }
 
 // ============================================
-// ITEMS
+// ITEMS MANAGEMENT
 // ============================================
 function addItem(data = { name: '', qty: 1, price: 0, tax: 0 }) {
   items.push({ ...data });
@@ -114,8 +108,10 @@ function addItem(data = { name: '', qty: 1, price: 0, tax: 0 }) {
 
 function renderItems() {
   const body = $('itemsBody');
+  if (!body) return;
+
   body.innerHTML = items.map((it, idx) => `
-    <tr style="animation: fadeInUp 0.3s ease ${idx * 0.05}s backwards">
+    <tr>
       <td>${idx + 1}</td>
       <td><input data-idx="${idx}" data-k="name" value="${escapeHtml(it.name)}" placeholder="Item name" /></td>
       <td><input data-idx="${idx}" data-k="qty" type="number" min="0" step="0.01" value="${it.qty}" /></td>
@@ -123,25 +119,26 @@ function renderItems() {
       <td><input data-idx="${idx}" data-k="tax" type="number" min="0" step="0.01" value="${it.tax}" /></td>
       <td class="line-total">${formatMoney(lineTotal(it))}</td>
       <td class="no-print"><button class="btn danger" data-rm="${idx}" style="padding:6px 10px;min-height:auto">×</button></td>
-    </tr>`).join('');
+    </tr>
+  `).join('');
 
-  body.querySelectorAll('input').forEach((inp) =>
+  body.querySelectorAll('input').forEach((inp) => {
     inp.addEventListener('input', (e) => {
       const i = +e.target.dataset.idx;
       const k = e.target.dataset.k;
       items[i][k] = k === 'name' ? e.target.value : (parseFloat(e.target.value) || 0);
       recalc();
-    })
-  );
+    });
+  });
 
-  body.querySelectorAll('[data-rm]').forEach((b) =>
+  body.querySelectorAll('[data-rm]').forEach((b) => {
     b.addEventListener('click', () => {
       items.splice(+b.dataset.rm, 1);
       if (!items.length) items.push({ name: '', qty: 1, price: 0, tax: 0 });
       renderItems();
       recalc();
-    })
-  );
+    });
+  });
 
   recalc();
 }
@@ -153,7 +150,7 @@ function lineTotal(it) {
 }
 
 // ============================================
-// TOTALS CALC
+// RECALCULATE TOTALS
 // ============================================
 function recalc() {
   const body = $('itemsBody');
@@ -178,19 +175,58 @@ function recalc() {
 
   const dP = $('discountP');
   if (dP) dP.textContent = formatMoney(disc);
+
+  // 👇 Balance Calculation
+  const received = parseFloat($('amountReceived')?.value) || 0;
+  const balance = Math.max(0, finalTotal - received);
+
+  const balEl = $('balanceDisplay');
+  if (balEl) {
+    balEl.textContent = formatMoney(balance);
+    balEl.style.color = balance > 0 ? '#ef4444' : '#10b981';
+    balEl.style.background = balance > 0 ? 'rgba(239,68,68,0.1)' : 'rgba(16,185,129,0.1)';
+  }
+
+  syncPrintFields();
 }
 
 // ============================================
-// SAVE INVOICE — FIXED (UPDATE vs INSERT)
+// SYNC PRINT FIELDS
+// ============================================
+function syncPrintFields() {
+  const setText = (id, val) => {
+    const el = $(id);
+    if (el) el.textContent = val || '';
+  };
+
+  setText('custNameP', $('custName')?.value);
+  setText('paymentModeP', $('paymentMode')?.value || '');
+  setText('paymentStatusP', $('paymentStatus')?.value || '');
+
+  const received = parseFloat($('amountReceived')?.value) || 0;
+  setText('amountReceivedP', formatMoney(received));
+}
+
+// ============================================
+// SAVE INVOICE
 // ============================================
 async function saveInvoice() {
-  const custName = $('custName').value.trim();
-  if (!custName) return alert('⚠️ Customer name required');
+  if (!isAdminUser && existingId && !isOwner) {
+    return alert('⚠️ Aap sirf apni invoices edit kar sakte hain.');
+  }
+
+  const custName = $('custName')?.value.trim();
+  if (!custName) {
+    alert('⚠️ Customer name required');
+    $('custName')?.focus();
+    return;
+  }
 
   const validItems = items.filter((i) => i.name.trim() && i.qty > 0);
   if (!validItems.length) return alert('⚠️ Add at least 1 item');
 
   const btn = $('saveBtn');
+  const originalText = btn.textContent;
   btn.disabled = true;
   btn.textContent = '⏳ Saving...';
 
@@ -199,82 +235,65 @@ async function saveInvoice() {
   const disc = parseFloat($('discount').value) || 0;
   const grand = Math.max(0, subtotal + taxTotal - disc);
 
-const payload = {
-  invoice_number: $('invNo').textContent,
-  customer_name: custName,
-  subtotal, tax_total: taxTotal, discount: disc, grand_total: grand,
-  payment_mode: $('paymentMode').value,
-  notes: $('notes').value,
-  created_by: me.id,
-  created_by_name: me.full_name
-};
+  const received = parseFloat($('amountReceived')?.value) || 0;
 
-  let invoiceId;
+  // 👇 AB STATUS WAHI SAVE HOGA JO DROPDOWN ME SELECT HAI (Auto nahi badlega)
+  const status = $('paymentStatus')?.value || 'Pending';
+  const balance = Math.max(0, grand - received);
 
-  // ─────────────────────────────────────────
-  // CASE A: EXISTING INVOICE → UPDATE
-  // ─────────────────────────────────────────
+  const payload = {
+    customer_name: custName,
+    customer_phone: $('custPhone')?.value || '',
+    subtotal, tax_total: taxTotal, discount: disc, grand_total: grand,
+    payment_mode: $('paymentMode').value,
+    payment_status: status,           // Fixed Status
+    amount_received: received,
+    balance: balance,
+    notes: $('notes').value,
+    created_by: me.id,
+    created_by_name: me.full_name
+  };
+
+  let result;
+
   if (existingId) {
-    const { error } = await supabase
-      .from('invoices')
-      .update(payload)
-      .eq('id', existingId);
-
-    if (error) {
-      btn.disabled = false;
-      btn.textContent = '💾 Save Invoice';
-      return alert('❌ Update failed: ' + error.message);
-    }
-    invoiceId = existingId;
-
-    // Purane items delete karo (naye items insert honge)
-    await supabase.from('invoice_items').delete().eq('invoice_id', invoiceId);
-  }
-
-  // ─────────────────────────────────────────
-  // CASE B: NEW INVOICE → INSERT with unique number
-  // ─────────────────────────────────────────
-  else {
-    // Try karo 5 baar — agar collision ho to naya number generate karo
+    result = await supabase.from('invoices').update(payload).eq('id', existingId).select().single();
+  } else {
+    payload.invoice_number = $('invNo').textContent;
     let inserted = false;
     for (let attempt = 0; attempt < 5; attempt++) {
-      const newNumber = generateInvoiceNumber();
-      payload.invoice_number = newNumber;
-
-      const { data, error } = await supabase
-        .from('invoices')
-        .insert(payload)
-        .select()
-        .single();
-
-      if (!error) {
-        invoiceId = data.id;
+      const res = await supabase.from('invoices').insert(payload).select().single();
+      if (!res.error) {
+        result = res;
         inserted = true;
         break;
       }
-
-      // Agar duplicate error hai to retry karo
-      if (error.code === '23505' || error.message.includes('duplicate')) {
-        console.warn('Invoice number collision, retrying...', newNumber);
+      if (res.error.code === '23505') {
+        payload.invoice_number = generateInvoiceNumber();
         continue;
       }
-
-      // Koi aur error — fail kar do
-      btn.disabled = false;
-      btn.textContent = '💾 Save Invoice';
-      return alert('❌ ' + error.message);
+      result = res;
+      break;
     }
-
-    if (!inserted) {
+    if (!inserted && result?.error) {
       btn.disabled = false;
-      btn.textContent = '💾 Save Invoice';
-      return alert('❌ Could not generate unique invoice number. Try again.');
+      btn.textContent = originalText;
+      return alert('❌ ' + result.error.message);
     }
   }
 
-  // ─────────────────────────────────────────
-  // INSERT ITEMS (dono cases ke liye)
-  // ─────────────────────────────────────────
+  if (result.error) {
+    btn.disabled = false;
+    btn.textContent = originalText;
+    return alert('❌ ' + result.error.message);
+  }
+
+  const invoiceId = result.data.id;
+
+  if (existingId) {
+    await supabase.from('invoice_items').delete().eq('invoice_id', invoiceId);
+  }
+
   const itemRows = validItems.map((i) => ({
     invoice_id: invoiceId,
     product_name: i.name,
@@ -287,28 +306,42 @@ const payload = {
   const { error: e2 } = await supabase.from('invoice_items').insert(itemRows);
   if (e2) {
     btn.disabled = false;
-    btn.textContent = '💾 Save Invoice';
-    return alert('❌ Items failed: ' + e2.message);
+    btn.textContent = originalText;
+    return alert('❌ Items save failed: ' + e2.message);
   }
 
   btn.textContent = '✅ Saved!';
+
   setTimeout(() => {
     window.location.href = me.role === 'admin' ? 'admin.html' : 'worker.html';
-  }, 600);
+  }, 800);
 }
+
 // ============================================
-// LOAD EXISTING INVOICE (View/Print mode)
+// LOAD EXISTING INVOICE
 // ============================================
 async function loadExisting(id) {
   const { data: inv } = await supabase.from('invoices').select('*').eq('id', id).single();
   if (!inv) return alert('Invoice not found');
+
+  isOwner = inv.created_by === me.id;
+
+  if (!isOwner && !isAdminUser) {
+    alert('⚠️ Aap sirf apni invoices edit kar sakte hain.');
+    window.location.href = 'worker.html';
+    return;
+  }
 
   $('invNo').textContent = inv.invoice_number;
   $('invDate').textContent = formatDate(inv.created_at);
   $('invBy').textContent = inv.created_by_name;
   $('custName').value = inv.customer_name || '';
   $('discount').value = inv.discount || 0;
+
+  // Payment fields load karo
   $('paymentMode').value = inv.payment_mode || 'Cash';
+  $('paymentStatus').value = inv.payment_status || 'Paid';
+  $('amountReceived').value = inv.amount_received || inv.grand_total || 0;
   $('notes').value = inv.notes || '';
 
   const { data: rows } = await supabase.from('invoice_items').select('*').eq('invoice_id', id);
@@ -318,7 +351,13 @@ async function loadExisting(id) {
   if (!items.length) items.push({ name: '', qty: 1, price: 0, tax: 0 });
 
   renderItems();
-  syncPrintFields();
+
+  const saveBtn = $('saveBtn');
+  if (saveBtn) {
+    saveBtn.classList.remove('hidden');
+    saveBtn.disabled = false;
+    saveBtn.textContent = '💾 Update Invoice';
+    saveBtn.style.opacity = '1';
+    saveBtn.style.cursor = 'pointer';
+  }
 }
-
-
